@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "f0nXfUjHDF0yBOf3DldvtQWUbu3Q+yhNGyANNSnckm0=",
+  "Source": "UserOnboarding.API",
+  "BasePath": "_content/UserOnboarding.API",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

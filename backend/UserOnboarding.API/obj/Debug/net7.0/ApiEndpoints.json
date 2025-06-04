@@ -1,0 +1,192 @@
+[
+  {
+    "ContainingType": "UserOnboarding.API.Controllers.AccountController",
+    "Method": "VerifyEmail",
+    "RelativePath": "api/Account/verify-email",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "UserOnboarding.API.Controllers.VerifyEmailRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserOnboarding.API.Controllers.AccountController",
+    "Method": "VerifyOTP",
+    "RelativePath": "api/Account/verify-otp",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "UserOnboarding.API.Controllers.VerifyOTPRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserOnboarding.API.Controllers.AdminController",
+    "Method": "GetDashboardStats",
+    "RelativePath": "api/Admin/dashboard",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserOnboarding.API.Controllers.AdminController",
+    "Method": "Login",
+    "RelativePath": "api/Admin/login",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "UserOnboarding.API.Controllers.LoginRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserOnboarding.API.Controllers.AdminController",
+    "Method": "ApproveSubmission",
+    "RelativePath": "api/Admin/submission/{id}/approve",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "UserOnboarding.API.Controllers.ReviewRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserOnboarding.API.Controllers.AdminController",
+    "Method": "RejectSubmission",
+    "RelativePath": "api/Admin/submission/{id}/reject",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "UserOnboarding.API.Controllers.ReviewRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserOnboarding.API.Controllers.AdminController",
+    "Method": "GetSubmissions",
+    "RelativePath": "api/Admin/submissions",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserOnboarding.API.Controllers.UserController",
+    "Method": "SubmitCompanyDetails",
+    "RelativePath": "api/User/company",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "UserOnboarding.API.Controllers.CompanyDetailsRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserOnboarding.API.Controllers.UserController",
+    "Method": "SubmitDirectorDetails",
+    "RelativePath": "api/User/director",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "UserOnboarding.API.Controllers.DirectorDetailsRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserOnboarding.API.Controllers.UserController",
+    "Method": "SubmitEKYC",
+    "RelativePath": "api/User/ekyc",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "UserOnboarding.API.Controllers.EKYCRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserOnboarding.API.Controllers.UserController",
+    "Method": "SubmitOnboarding",
+    "RelativePath": "api/User/submit",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "UserOnboarding.API.Controllers.SubmitRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserOnboarding.API.Controllers.UserController",
+    "Method": "VerifyEmail",
+    "RelativePath": "api/User/verify/email",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "UserOnboarding.API.Controllers.EmailVerificationRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  }
+]
