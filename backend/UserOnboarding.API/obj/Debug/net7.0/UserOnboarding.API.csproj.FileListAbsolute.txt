@@ -157,3 +157,4 @@ D:\Bipin\Projects\AI_project\AI_project\backend\UserOnboarding.API\obj\Debug\net
 D:\Bipin\Projects\AI_project\AI_project\backend\UserOnboarding.API\obj\Debug\net7.0\UserOnboarding.API.pdb
 D:\Bipin\Projects\AI_project\AI_project\backend\UserOnboarding.API\obj\Debug\net7.0\UserOnboarding.API.genruntimeconfig.cache
 D:\Bipin\Projects\AI_project\AI_project\backend\UserOnboarding.API\obj\Debug\net7.0\ref\UserOnboarding.API.dll
+E:\All_VCQRU_Project\AI_project\backend\UserOnboarding.API\obj\Debug\net7.0\UserOnboarding.API.sourcelink.json
