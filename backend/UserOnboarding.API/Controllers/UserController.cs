@@ -131,6 +131,7 @@ namespace UserOnboarding.API.Controllers
                     .Include(u => u.EKYC)
                     .Include(u => u.CompanyDetails)
                     .Include(u => u.DirectorDetails)
+                    .Include(u => u.SubmissionStatus)
                     .FirstOrDefaultAsync(u => u.Email == request.Email);
 
                 if (user == null)
@@ -138,27 +139,27 @@ namespace UserOnboarding.API.Controllers
                     return NotFound(new { message = "User not found" });
                 }
 
-                // Create comprehensive onboarding entry with data from frontend
-                var onboardingEntry = new OnboardingEntry
+                // Update user's existing data with the comprehensive submission data
+                if (user.EKYC != null)
                 {
-                    Email = request.Email,
-                    CompanyName = request.CompanyName ?? user.CompanyDetails?.Name ?? "",
-                    DirectorName = request.DirectorName ?? "Director",
-                    PanNumber = request.PanNumber ?? user.EKYC?.PANNumber ?? "",
-                    GstNumber = request.GstNumber ?? user.EKYC?.GSTNumber ?? "",
-                    AadharNumber = request.AadharNumber ?? user.DirectorDetails?.AadharNumber ?? "",
-                    CompanyAddress = request.Address ?? user.CompanyDetails?.Address ?? "",
-                    City = request.City ?? user.CompanyDetails?.City ?? "",
-                    State = request.State ?? user.CompanyDetails?.State ?? "",
-                    Pincode = request.Pincode ?? "",
-                    DirectorDesignation = request.Designation ?? "",
-                    DirectorAddress = request.DirectorAddress ?? "",
-                    Status = "Pending",
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                };
+                    user.EKYC.PANNumber = request.PanNumber ?? user.EKYC.PANNumber;
+                    user.EKYC.GSTNumber = request.GstNumber ?? user.EKYC.GSTNumber;
+                }
 
-                // Update user submission status if it doesn't exist
+                if (user.CompanyDetails != null)
+                {
+                    user.CompanyDetails.Name = request.CompanyName ?? user.CompanyDetails.Name;
+                    user.CompanyDetails.Address = request.Address ?? user.CompanyDetails.Address;
+                    user.CompanyDetails.City = request.City ?? user.CompanyDetails.City;
+                    user.CompanyDetails.State = request.State ?? user.CompanyDetails.State;
+                }
+
+                if (user.DirectorDetails != null)
+                {
+                    user.DirectorDetails.AadharNumber = request.AadharNumber ?? user.DirectorDetails.AadharNumber;
+                }
+
+                // Update user submission status
                 if (user.SubmissionStatus == null)
                 {
                     user.SubmissionStatus = new SubmissionStatus
@@ -173,7 +174,6 @@ namespace UserOnboarding.API.Controllers
                     user.SubmissionStatus.SubmittedAt = DateTime.UtcNow;
                 }
 
-                _context.OnboardingEntries.Add(onboardingEntry);
                 await _context.SaveChangesAsync();
                 
                 return Ok(new { message = "Onboarding submitted successfully" });
@@ -183,6 +183,86 @@ namespace UserOnboarding.API.Controllers
                 Console.WriteLine($"Error in SubmitOnboarding: {ex.Message}");
                 Console.WriteLine($"Stack trace: {ex.StackTrace}");
                 return StatusCode(500, new { message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        [HttpGet("check-progress/{email}")]
+        public async Task<IActionResult> CheckUserProgress(string email)
+        {
+            try
+            {
+                var user = await _context.Users
+                    .Include(u => u.EKYC)
+                    .Include(u => u.CompanyDetails)
+                    .Include(u => u.DirectorDetails)
+                    .Include(u => u.SubmissionStatus)
+                    .FirstOrDefaultAsync(u => u.Email == email);
+
+                if (user == null)
+                {
+                    return Ok(new { 
+                        exists = false,
+                        currentStep = 0,
+                        isSubmitted = false
+                    });
+                }
+
+                // Check if already submitted
+                if (user.SubmissionStatus != null && user.SubmissionStatus.Status == "Pending")
+                {
+                    return Ok(new { 
+                        exists = true,
+                        currentStep = -1, // -1 indicates already submitted
+                        isSubmitted = true,
+                        message = "Your request has been submitted and your documents are under process."
+                    });
+                }
+
+                // Determine current step based on completed data
+                int currentStep = 0;
+                
+                if (user.IsEmailVerified)
+                {
+                    currentStep = 1; // Move to eKYC
+                    
+                    if (user.EKYC != null && !string.IsNullOrEmpty(user.EKYC.PANNumber))
+                    {
+                        currentStep = 2; // Move to Company Details
+                        
+                        if (user.CompanyDetails != null && !string.IsNullOrEmpty(user.CompanyDetails.Name))
+                        {
+                            currentStep = 3; // Move to Director Details
+                            
+                            if (user.DirectorDetails != null && !string.IsNullOrEmpty(user.DirectorDetails.AadharNumber))
+                            {
+                                currentStep = 4; // Move to Confirmation
+                            }
+                        }
+                    }
+                }
+
+                return Ok(new { 
+                    exists = true,
+                    currentStep = currentStep,
+                    isSubmitted = false,
+                    userData = new
+                    {
+                        email = user.Email,
+                        isEmailVerified = user.IsEmailVerified,
+                        panNumber = user.EKYC?.PANNumber,
+                        gstNumber = user.EKYC?.GSTNumber,
+                        companyName = user.CompanyDetails?.Name,
+                        companyAddress = user.CompanyDetails?.Address,
+                        companyCity = user.CompanyDetails?.City,
+                        companyState = user.CompanyDetails?.State,
+                        aadharNumber = user.DirectorDetails?.AadharNumber,
+                        directorPanNumber = user.DirectorDetails?.PANNumber
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error checking user progress", error = ex.Message });
             }
         }
     }

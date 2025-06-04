@@ -78,7 +78,13 @@ namespace UserOnboarding.API.Controllers
                 return BadRequest(ModelState);
             }
 
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+            var user = await _context.Users
+                .Include(u => u.EKYC)
+                .Include(u => u.CompanyDetails)
+                .Include(u => u.DirectorDetails)
+                .Include(u => u.SubmissionStatus)
+                .FirstOrDefaultAsync(u => u.Email == request.Email);
+                
             if (user == null)
             {
                 return NotFound(new { message = "User not found" });
@@ -95,7 +101,52 @@ namespace UserOnboarding.API.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Email verified successfully" });
+            // Check if user has already submitted
+            if (user.SubmissionStatus != null && user.SubmissionStatus.Status == "Pending")
+            {
+                return Ok(new { 
+                    message = "Email verified successfully",
+                    isSubmitted = true,
+                    submissionMessage = "Your request has been submitted and your documents are under process.",
+                    currentStep = -1
+                });
+            }
+
+            // Determine current step based on completed data
+            int currentStep = 1; // After email verification, default to eKYC step
+            
+            if (user.EKYC != null && !string.IsNullOrEmpty(user.EKYC.PANNumber))
+            {
+                currentStep = 2; // Move to Company Details
+                
+                if (user.CompanyDetails != null && !string.IsNullOrEmpty(user.CompanyDetails.Name))
+                {
+                    currentStep = 3; // Move to Director Details
+                    
+                    if (user.DirectorDetails != null && !string.IsNullOrEmpty(user.DirectorDetails.AadharNumber))
+                    {
+                        currentStep = 4; // Move to Confirmation
+                    }
+                }
+            }
+
+            return Ok(new { 
+                message = "Email verified successfully",
+                isSubmitted = false,
+                currentStep = currentStep,
+                userData = new
+                {
+                    email = user.Email,
+                    isEmailVerified = user.IsEmailVerified,
+                    panNumber = user.EKYC?.PANNumber,
+                    gstNumber = user.EKYC?.GSTNumber,
+                    companyName = user.CompanyDetails?.Name,
+                    companyAddress = user.CompanyDetails?.Address,
+                    companyCity = user.CompanyDetails?.City,
+                    companyState = user.CompanyDetails?.State,
+                    aadharNumber = user.DirectorDetails?.AadharNumber
+                }
+            });
         }
 
         private string GenerateOTP()

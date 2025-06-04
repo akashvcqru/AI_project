@@ -1,17 +1,19 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Form, Input, Button, message } from 'antd'
+import { Form, Input, Button, message, Alert } from 'antd'
 import { useVerifyEmailMutation, useVerifyOtpMutation } from '@/store/services/onboardingApi'
 import { useAppDispatch } from '@/store/hooks'
 import { useOnboarding } from '../../contexts/OnboardingContext'
+import SubmissionSuccess from './SubmissionSuccess'
 
 interface AccountVerificationProps {
   onNext: () => void
   onPrev: () => void
+  onAlreadySubmitted?: () => void
 }
 
-const AccountVerification = ({ onNext, onPrev }: AccountVerificationProps) => {
+const AccountVerification = ({ onNext, onPrev, onAlreadySubmitted }: AccountVerificationProps) => {
   const [form] = Form.useForm()
   const [verifyEmail, { isLoading: isEmailLoading }] = useVerifyEmailMutation()
   const [verifyOtp, { isLoading: isOtpLoading }] = useVerifyOtpMutation()
@@ -20,10 +22,12 @@ const AccountVerification = ({ onNext, onPrev }: AccountVerificationProps) => {
   const [countdown, setCountdown] = useState(0)
   const [canResend, setCanResend] = useState(true)
   const [isNewVerification, setIsNewVerification] = useState(false)
+  const [isAlreadySubmitted, setIsAlreadySubmitted] = useState(false)
+  const [submissionMessage, setSubmissionMessage] = useState('')
   const dispatch = useAppDispatch()
   
   // Global form state
-  const { formData, updateFormData, loadProgress, goToStep, saveProgress, currentStep } = useOnboarding()
+  const { formData, updateFormData, loadProgress, goToStep, saveProgress, currentStep, updateMultipleFields } = useOnboarding()
 
   // Pre-fill email from global state
   useEffect(() => {
@@ -51,6 +55,56 @@ const AccountVerification = ({ onNext, onPrev }: AccountVerificationProps) => {
     setCanResend(false)
   }
 
+  const checkUserProgress = async (email: string) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/User/check-progress/${encodeURIComponent(email)}`)
+      const data = await response.json()
+      
+      if (data.isSubmitted) {
+        setIsAlreadySubmitted(true)
+        setSubmissionMessage(data.message)
+        // Dispatch custom event to show only SubmissionSuccess
+        if (onAlreadySubmitted) {
+          onAlreadySubmitted()
+        } else {
+          window.dispatchEvent(new Event('showSubmissionSuccess'))
+        }
+        return true
+      }
+      
+      if (data.exists && data.currentStep > 0) {
+        // Load user data into form
+        if (data.userData) {
+          const updates: any = {}
+          if (data.userData.email) updates.email = data.userData.email
+          if (data.userData.isEmailVerified) updates.isEmailVerified = data.userData.isEmailVerified
+          if (data.userData.panNumber) updates.panNumber = data.userData.panNumber
+          if (data.userData.gstNumber) updates.gstNumber = data.userData.gstNumber
+          if (data.userData.companyName) updates.companyName = data.userData.companyName
+          if (data.userData.companyAddress) updates.address = data.userData.companyAddress
+          if (data.userData.companyCity) updates.city = data.userData.companyCity
+          if (data.userData.companyState) updates.state = data.userData.companyState
+          if (data.userData.aadharNumber) updates.aadharNumber = data.userData.aadharNumber
+          
+          updateMultipleFields(updates)
+        }
+        
+        // Navigate to the appropriate step
+        setTimeout(() => {
+          goToStep(data.currentStep)
+        }, 1000)
+        
+        message.info(`Welcome back! Resuming from where you left off...`)
+        return true
+      }
+      
+      return false
+    } catch (error) {
+      console.error('Error checking user progress:', error)
+      return false
+    }
+  }
+
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const email = e.target.value
     updateFormData('email', email)
@@ -61,6 +115,13 @@ const AccountVerification = ({ onNext, onPrev }: AccountVerificationProps) => {
     try {
       const values = await form.validateFields(['email'])
       updateFormData('email', values.email)
+      
+      // Check if user has already submitted or has progress
+      const hasProgress = await checkUserProgress(values.email)
+      if (hasProgress) {
+        return // Don't send OTP if user is already submitted or being redirected
+      }
+      
       await verifyEmail(values).unwrap()
       setIsOtpSent(true)
       startCountdown()
@@ -84,10 +145,40 @@ const AccountVerification = ({ onNext, onPrev }: AccountVerificationProps) => {
   const handleOtpVerification = async () => {
     try {
       const values = await form.validateFields(['email', 'otp'])
-      await verifyOtp(values).unwrap()
+      const response = await verifyOtp(values).unwrap()
+      
+      // Check if user has already submitted
+      if (response.isSubmitted) {
+        setIsAlreadySubmitted(true)
+        setSubmissionMessage(response.submissionMessage)
+        message.success('Email verified successfully')
+        // Dispatch custom event to show only SubmissionSuccess
+        if (onAlreadySubmitted) {
+          onAlreadySubmitted()
+        } else {
+          window.dispatchEvent(new Event('showSubmissionSuccess'))
+        }
+        return
+      }
+      
+      // Update form data with user's existing data if any
+      if (response.userData) {
+        const updates: any = { isEmailVerified: true }
+        if (response.userData.panNumber) updates.panNumber = response.userData.panNumber
+        if (response.userData.gstNumber) updates.gstNumber = response.userData.gstNumber
+        if (response.userData.companyName) updates.companyName = response.userData.companyName
+        if (response.userData.companyAddress) updates.address = response.userData.companyAddress
+        if (response.userData.companyCity) updates.city = response.userData.companyCity
+        if (response.userData.companyState) updates.state = response.userData.companyState
+        if (response.userData.aadharNumber) updates.aadharNumber = response.userData.aadharNumber
+        
+        updateMultipleFields(updates)
+      } else {
+        updateFormData('isEmailVerified', true)
+      }
+      
       setIsEmailVerified(true)
       setIsNewVerification(true)
-      updateFormData('isEmailVerified', true)
       setCountdown(0)
       setCanResend(true)
       message.success('Email verified successfully')
@@ -95,6 +186,12 @@ const AccountVerification = ({ onNext, onPrev }: AccountVerificationProps) => {
       // Save progress immediately after email verification
       setTimeout(() => {
         saveProgress()
+        
+        // Navigate to appropriate step if user has existing progress
+        if (response.currentStep && response.currentStep > 1) {
+          message.info('Welcome back! Resuming from where you left off...')
+          goToStep(response.currentStep)
+        }
       }, 100)
     } catch (error) {
       message.error('Invalid OTP. Please try again.')
@@ -162,62 +259,69 @@ const AccountVerification = ({ onNext, onPrev }: AccountVerificationProps) => {
     )
   }
 
-  return (
-    <Form
-      form={form}
-      onFinish={handleSubmit}
-      layout="vertical"
-      className="max-w-md mx-auto"
-    >
-      <Form.Item
-        name="email"
-        label="Email"
-        rules={[
-          { required: true, message: 'Please input your email!' },
-          { type: 'email', message: 'Please enter a valid email address' }
-        ]}
-      >
-        <Input
-          placeholder="Enter your email"
-          disabled={isEmailVerified}
-          value={formData.email}
-          onChange={handleEmailChange}
-          suffix={renderEmailSuffixButton()}
-        />
-      </Form.Item>
+  // If user has already submitted, show the SubmissionSuccess component
+  if (isAlreadySubmitted) {
+    return <SubmissionSuccess />
+  }
 
-      {isOtpSent && !isEmailVerified && (
+  return (
+    <div>
+      <Form
+        form={form}
+        onFinish={handleSubmit}
+        layout="vertical"
+        className="max-w-md mx-auto"
+      >
         <Form.Item
-          name="otp"
-          label="OTP"
+          name="email"
+          label="Email"
           rules={[
-            { required: true, message: 'Please input the OTP!' },
-            { len: 6, message: 'OTP must be 6 digits' }
+            { required: true, message: 'Please input your email!' },
+            { type: 'email', message: 'Please enter a valid email address' }
           ]}
         >
           <Input
-            placeholder="Enter 6-digit OTP"
-            maxLength={6}
-            suffix={
-              <Button
-                type="link"
-                onClick={handleOtpVerification}
-                loading={isOtpLoading}
-                disabled={isOtpLoading}
-              >
-                Verify OTP
-              </Button>
-            }
+            placeholder="Enter your email"
+            disabled={isEmailVerified}
+            value={formData.email}
+            onChange={handleEmailChange}
+            suffix={renderEmailSuffixButton()}
           />
         </Form.Item>
-      )}
 
-      <div className="flex justify-end gap-4">
-        <Button type="primary" htmlType="submit" disabled={!isEmailVerified}>
-          Continue
-        </Button>
-      </div>
-    </Form>
+        {isOtpSent && !isEmailVerified && (
+          <Form.Item
+            name="otp"
+            label="OTP"
+            rules={[
+              { required: true, message: 'Please input the OTP!' },
+              { len: 6, message: 'OTP must be 6 digits' }
+            ]}
+          >
+            <Input
+              placeholder="Enter 6-digit OTP"
+              maxLength={6}
+              suffix={
+                <Button
+                  type="link"
+                  onClick={handleOtpVerification}
+                  loading={isOtpLoading}
+                  disabled={isOtpLoading}
+                >
+                  Verify OTP
+                </Button>
+              }
+            />
+          </Form.Item>
+        )}
+
+        <div className="flex justify-end gap-4">
+          <Button type="primary" htmlType="submit" disabled={!isEmailVerified}>
+            Continue
+          </Button>
+        </div>
+      </Form>
+    </div>
   )
 }
 

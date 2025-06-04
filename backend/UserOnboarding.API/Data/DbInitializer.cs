@@ -7,7 +7,8 @@ namespace UserOnboarding.API.Data
     {
         public static async Task Initialize(ApplicationDbContext context)
         {
-            context.Database.EnsureCreated();
+            // Apply any pending migrations
+            await context.Database.MigrateAsync();
 
             // Check if we already have an admin user
             if (await context.Admins.AnyAsync())

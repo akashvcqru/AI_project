@@ -2,7 +2,6 @@
 
 import { Button, Card, Descriptions, message } from 'antd'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { useOnboarding } from '../../contexts/OnboardingContext'
 
 interface ConfirmationProps {
@@ -13,7 +12,6 @@ interface ConfirmationProps {
 const ConfirmationSection = ({ onNext, onPrev }: ConfirmationProps) => {
   const { formData, resetProgress } = useOnboarding()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const router = useRouter()
 
   const handleFinalSubmit = async () => {
     try {
@@ -61,12 +59,13 @@ const ConfirmationSection = ({ onNext, onPrev }: ConfirmationProps) => {
           }
         }
         
-        message.success('Onboarding completed successfully!')
+        message.success('Your request has been submitted and your documents are under process.')
         
         // Reset the form after successful submission
         setTimeout(() => {
           resetProgress()
-          router.push('/dashboard')
+          // The parent component will handle showing the success page
+          onNext()
         }, 2000)
       } else {
         // Handle error response
