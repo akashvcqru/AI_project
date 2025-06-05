@@ -1,7 +1,7 @@
 'use client'
 
-import { Button, Card, Descriptions, message } from 'antd'
-import { useState } from 'react'
+import { Button, Card, Descriptions, message, Checkbox } from 'antd'
+import React, { useState } from 'react'
 import { useOnboarding } from '../../contexts/OnboardingContext'
 
 interface ConfirmationProps {
@@ -12,6 +12,8 @@ interface ConfirmationProps {
 const ConfirmationSection = ({ onNext, onPrev }: ConfirmationProps) => {
   const { formData, resetProgress } = useOnboarding()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [termsAccepted, setTermsAccepted] = useState(false)
+  const [directorDetailsConfirmed, setDirectorDetailsConfirmed] = useState(false)
 
   const handleFinalSubmit = async () => {
     try {
@@ -96,21 +98,23 @@ const ConfirmationSection = ({ onNext, onPrev }: ConfirmationProps) => {
   }
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '24px', textAlign: 'center' }}>
-        <h2 style={{ color: '#1f2937', marginBottom: '8px' }}>Review Your Information</h2>
-        <p style={{ color: '#666', margin: 0 }}>
+    <React.Fragment>
+      <div className="mb-8 text-center">
+        <h1 className="text-3xl font-bold text-gray-900 mb-3 tracking-tight">
+          Review Your Information
+        </h1>
+        <p className="text-gray-600">
           Please review all the information below before submitting your onboarding application.
         </p>
       </div>
 
-      <div style={{ display: 'grid', gap: '24px' }}>
+      <div className="grid gap-6">
         {/* Account Information */}
         <Card title="Account Information" size="small">
           <Descriptions column={1} bordered size="small">
             <Descriptions.Item label="Email Address">{formData.email}</Descriptions.Item>
             <Descriptions.Item label="Email Status">
-              <span style={{ color: formData.isEmailVerified ? '#52c41a' : '#ff4d4f' }}>
+              <span className={formData.isEmailVerified ? 'text-green-500' : 'text-red-500'}>
                 {formData.isEmailVerified ? '✓ Verified' : '✗ Not Verified'}
               </span>
             </Descriptions.Item>
@@ -149,45 +153,61 @@ const ConfirmationSection = ({ onNext, onPrev }: ConfirmationProps) => {
             <Descriptions.Item label="Address" span={2}>{formData.directorAddress}</Descriptions.Item>
           </Descriptions>
         </Card>
-      </div>
 
-      {/* Action Buttons */}
-      <div style={{
-        marginTop: '32px', 
-        display: 'flex', 
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '24px',
-        background: '#f8fafc',
-        borderRadius: '8px'
-      }}>
-        <Button size="large" onClick={onPrev}>
-          Previous
-        </Button>
-        
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ margin: '0 0 8px 0', color: '#666', fontSize: '14px' }}>
-            By submitting, you agree to our terms and conditions
-          </p>
-          <Button 
-            type="primary" 
-            size="large"
-            loading={isSubmitting}
-            onClick={handleFinalSubmit}
-            style={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              border: 'none',
-              height: '48px',
-              paddingLeft: '32px',
-              paddingRight: '32px',
-              fontSize: '16px'
-            }}
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit Application'}
+        {/* Confirmation Checkboxes */}
+        <Card size="small">
+          <div className="space-y-4">
+            <Checkbox
+              checked={directorDetailsConfirmed}
+              onChange={(e) => setDirectorDetailsConfirmed(e.target.checked)}
+              className="text-gray-600"
+            >
+              I confirm that all the director information provided above is accurate and complete
+            </Checkbox>
+            
+            <div className="border-t border-gray-100 pt-4">
+              <Checkbox
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="text-gray-600"
+              >
+                By submitting, you agree to our{' '}
+                <a 
+                  href="/terms" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-indigo-600 hover:text-indigo-800 underline"
+                >
+                  terms and conditions
+                </a>
+              </Checkbox>
+            </div>
+          </div>
+        </Card>
+
+        {/* Action Buttons */}
+        <div className="flex justify-between items-center p-6 bg-slate-50 rounded-lg">
+          <Button size="large" onClick={onPrev}>
+            Previous
           </Button>
+          
+          <div className="text-center">
+            <Button 
+              type="primary" 
+              size="large"
+              loading={isSubmitting}
+              onClick={handleFinalSubmit}
+              disabled={!termsAccepted || !directorDetailsConfirmed}
+              className={`bg-gradient-to-r from-indigo-500 to-purple-600 border-none px-8 text-base ${
+                (!termsAccepted || !directorDetailsConfirmed) ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit Application'}
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </React.Fragment>
   )
 }
 
