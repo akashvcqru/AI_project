@@ -270,7 +270,6 @@ const AccountVerification = ({ onNext, onPrev, onAlreadySubmitted }: AccountVeri
         form={form}
         onFinish={handleSubmit}
         layout="vertical"
-        className="max-w-md mx-auto"
       >
         <Form.Item
           name="email"

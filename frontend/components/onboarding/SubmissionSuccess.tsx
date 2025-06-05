@@ -20,13 +20,6 @@ const SubmissionSuccess = ({ onPrev }: SubmissionSuccessProps) => {
           key="home"
           type="primary"
           onClick={() => router.push('/')}
-          style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            border: 'none',
-            height: '40px',
-            paddingLeft: '24px',
-            paddingRight: '24px',
-          }}
         >
           Go to Home
         </Button>,
@@ -41,12 +34,7 @@ const SubmissionSuccess = ({ onPrev }: SubmissionSuccessProps) => {
         </Button>,
       ]}
     >
-      <div style={{ 
-        background: '#f0f2f5', 
-        padding: '24px', 
-        borderRadius: '8px',
-        marginTop: '24px'
-      }}>
+      <div>
         <h4 style={{ marginBottom: '16px' }}>What happens next?</h4>
         <ul style={{ textAlign: 'left', maxWidth: '500px', margin: '0 auto' }}>
           <li>Our team will review your submitted documents</li>
