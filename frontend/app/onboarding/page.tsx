@@ -81,40 +81,42 @@ const OnboardingContent = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-      {/* Header */}
-      <Card className="border-b border-gray-100 shadow-sm rounded-none">
-        <Row align="middle" justify="space-between">
-          <Col>
-            <Space size="large">
-              <div className="relative w-10 h-10">
-                <img
-                  src="https://www.vcqru.com/newContent/front-assets/img/vcqru-logo.png"
-                  alt="VCQRU Logo"
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <Space direction="vertical" size={0}>
-                <Title level={4} className="!mb-0 !text-gray-800 font-semibold">
-                  VCQRU Onboarding
-                </Title>
-                <Text className="text-xs text-gray-500">
-                  Complete your company registration
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-50">
+        <Card className="border-b border-gray-100 shadow-sm rounded-none">
+          <Row align="middle" justify="space-between">
+            <Col>
+              <Space size="large">
+                <div className="relative h-10">
+                  <img
+                    src="https://www.vcqru.com/newContent/front-assets/img/vcqru-logo.png"
+                    alt="VCQRU Logo"
+                    className="h-full object-contain"
+                  />
+                </div>
+                <Space direction="vertical" size={0}>
+                  <Title level={4} className="!mb-0 !text-gray-800 font-semibold">
+                    VCQRU Onboarding
+                  </Title>
+                  <Text className="text-xs text-gray-500">
+                    Complete your company registration
+                  </Text>
+                </Space>
+              </Space>
+            </Col>
+            <Col>
+              <Space className="bg-blue-50 px-4 py-2 rounded-full">
+                <div className="w-6 h-6 flex items-center justify-center bg-blue-500 text-white rounded-full text-sm font-medium">
+                  {currentStep + 1}
+                </div>
+                <Text className="text-sm text-gray-600">
+                  Step {currentStep + 1} of {steps.length}
                 </Text>
               </Space>
-            </Space>
-          </Col>
-          <Col>
-            <Space className="bg-blue-50 px-4 py-2 rounded-full">
-              <div className="w-6 h-6 flex items-center justify-center bg-blue-500 text-white rounded-full text-sm font-medium">
-                {currentStep + 1}
-              </div>
-              <Text className="text-sm text-gray-600">
-                Step {currentStep + 1} of {steps.length}
-              </Text>
-            </Space>
-          </Col>
-        </Row>
-      </Card>
+            </Col>
+          </Row>
+        </Card>
+      </div>
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 py-4">
