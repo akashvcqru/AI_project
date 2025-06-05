@@ -6,6 +6,7 @@ interface FormData {
   // Account Verification
   email: string
   isEmailVerified: boolean
+  mobileNumber: string
   
   // eKYC Details
   panNumber: string
@@ -48,6 +49,7 @@ const initialFormData: FormData = {
   // Account Verification
   email: '',
   isEmailVerified: false,
+  mobileNumber: '',
   
   // eKYC Details
   panNumber: '',

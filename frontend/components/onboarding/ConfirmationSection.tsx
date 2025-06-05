@@ -153,6 +153,7 @@ const ConfirmationSection = ({ onNext, onPrev }: ConfirmationProps) => {
                 {formData.isEmailVerified ? '✓ Verified' : '✗ Not Verified'}
               </span>
             </Descriptions.Item>
+            <Descriptions.Item label="Mobile Number">{formData.mobileNumber}</Descriptions.Item>
           </Descriptions>
         </Card>
 

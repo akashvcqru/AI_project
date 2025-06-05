@@ -291,7 +291,7 @@ const AccountVerification = ({ onNext, onPrev, onAlreadySubmitted }: AccountVeri
         {isOtpSent && !isEmailVerified && (
           <Form.Item
             name="otp"
-            label="OTP"
+            label="Email Verification OTP"
             rules={[
               { required: true, message: 'Please input the OTP!' },
               { len: 6, message: 'OTP must be 6 digits' }
@@ -313,6 +313,26 @@ const AccountVerification = ({ onNext, onPrev, onAlreadySubmitted }: AccountVeri
             />
           </Form.Item>
         )}
+
+        <Form.Item
+          name="mobileNumber"
+          label="Mobile Number"
+          rules={[
+            { required: true, message: 'Please input your mobile number!' },
+            { pattern: /^[0-9]{10}$/, message: 'Please enter a valid 10-digit mobile number' }
+          ]}
+        >
+          <Input
+            placeholder="Enter your mobile number"
+            maxLength={10}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9]/g, '')
+              updateFormData('mobileNumber', value)
+              form.setFieldsValue({ mobileNumber: value })
+            }}
+            value={formData.mobileNumber}
+          />
+        </Form.Item>
 
         <div className="flex justify-end gap-4">
           <Button type="primary" htmlType="submit" disabled={!isEmailVerified}>
