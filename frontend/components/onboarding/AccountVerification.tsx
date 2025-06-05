@@ -34,10 +34,13 @@ const AccountVerification = ({ onNext, onPrev, onAlreadySubmitted }: AccountVeri
     if (formData.email) {
       form.setFieldsValue({ email: formData.email })
     }
+    if (formData.mobileNumber) {
+      form.setFieldsValue({ mobileNumber: formData.mobileNumber })
+    }
     if (formData.isEmailVerified) {
       setIsEmailVerified(true)
     }
-  }, [form, formData.email, formData.isEmailVerified])
+  }, [form, formData.email, formData.mobileNumber, formData.isEmailVerified])
 
   // Countdown timer effect
   useEffect(() => {
@@ -63,7 +66,6 @@ const AccountVerification = ({ onNext, onPrev, onAlreadySubmitted }: AccountVeri
       if (data.isSubmitted) {
         setIsAlreadySubmitted(true)
         setSubmissionMessage(data.message)
-        // Dispatch custom event to show only SubmissionSuccess
         if (onAlreadySubmitted) {
           onAlreadySubmitted()
         } else {
@@ -78,6 +80,7 @@ const AccountVerification = ({ onNext, onPrev, onAlreadySubmitted }: AccountVeri
           const updates: any = {}
           if (data.userData.email) updates.email = data.userData.email
           if (data.userData.isEmailVerified) updates.isEmailVerified = data.userData.isEmailVerified
+          if (data.userData.mobileNumber) updates.mobileNumber = data.userData.mobileNumber
           if (data.userData.panNumber) updates.panNumber = data.userData.panNumber
           if (data.userData.gstNumber) updates.gstNumber = data.userData.gstNumber
           if (data.userData.companyName) updates.companyName = data.userData.companyName
@@ -87,6 +90,11 @@ const AccountVerification = ({ onNext, onPrev, onAlreadySubmitted }: AccountVeri
           if (data.userData.aadharNumber) updates.aadharNumber = data.userData.aadharNumber
           
           updateMultipleFields(updates)
+          // Set form values after updating the global state
+          form.setFieldsValue({
+            email: data.userData.email,
+            mobileNumber: data.userData.mobileNumber
+          })
         }
         
         // Navigate to the appropriate step
@@ -205,18 +213,17 @@ const AccountVerification = ({ onNext, onPrev, onAlreadySubmitted }: AccountVeri
         return
       }
       
+      // Update both email and mobile number
       updateFormData('email', values.email)
+      updateFormData('mobileNumber', values.mobileNumber)
       updateFormData('isEmailVerified', true)
       
       // If email is already verified, just proceed to next step
-      // This handles both: fresh completion and navigation back from later steps
       if (isEmailVerified) {
         onNext()
         return
       }
       
-      // This code should never be reached since we check isEmailVerified above,
-      // but keeping it as fallback for edge cases
       message.success('Email verified successfully!')
       onNext()
     } catch (error) {
