@@ -4,11 +4,126 @@
 
 :root {
   --foreground-rgb: 0, 0, 0;
-  --background-rgb: 255, 255, 255;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-rgb));
+  background: rgb(var(--background-end-rgb));
   min-height: 100vh;
+}
+
+/* Custom styles for onboarding */
+.custom-steps .ant-steps-item-icon {
+  background: #fff !important;
+  border-color: #1890ff !important;
+}
+
+.custom-steps .ant-steps-item-active .ant-steps-item-icon {
+  background: #1890ff !important;
+}
+
+.custom-steps .ant-steps-item-finish .ant-steps-item-icon {
+  background: #fff !important;
+  border-color: #52c41a !important;
+}
+
+.custom-steps .ant-steps-item-finish .ant-steps-item-icon .ant-steps-icon {
+  color: #52c41a !important;
+}
+
+.custom-steps .ant-steps-item-title {
+  font-size: 0.9rem !important;
+  line-height: 1.2 !important;
+}
+
+.custom-steps .ant-steps-item-description {
+  font-size: 0.75rem !important;
+  color: #666 !important;
+}
+
+.custom-progress .ant-progress-bg {
+  background: linear-gradient(90deg, #1890ff 0%, #52c41a 100%) !important;
+}
+
+.custom-progress .ant-progress-outer {
+  background-color: #f0f0f0 !important;
+}
+
+/* Card hover effect */
+.shadow-xl {
+  transition: all 0.3s ease;
+}
+
+.shadow-xl:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+/* Form container styles */
+.bg-white {
+  background: #fff;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+/* Prevent scrolling */
+.h-screen {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.flex-1 {
+  flex: 1 1 0%;
+  min-height: 0; /* Important for flex child to prevent overflow */
+}
+
+.overflow-auto {
+  overflow: auto;
+}
+
+.overflow-hidden {
+  overflow: hidden;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .custom-steps .ant-steps-item-title {
+    font-size: 0.8rem !important;
+  }
+  
+  .custom-steps .ant-steps-item-description {
+    display: none;
+  }
+  
+  .max-w-6xl {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Form content styles */
+.ant-form {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.ant-form-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Adjust spacing for better fit */
+.py-2 {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
 } 
