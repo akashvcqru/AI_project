@@ -3,6 +3,7 @@
 import { Button, Card, Descriptions, message, Checkbox } from 'antd'
 import React, { useState } from 'react'
 import { useOnboarding } from '../../contexts/OnboardingContext'
+import { EditOutlined } from '@ant-design/icons'
 
 interface ConfirmationProps {
   onNext: () => void
@@ -10,10 +11,27 @@ interface ConfirmationProps {
 }
 
 const ConfirmationSection = ({ onNext, onPrev }: ConfirmationProps) => {
-  const { formData, resetProgress } = useOnboarding()
+  const { formData, resetProgress, goToStep } = useOnboarding()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [directorDetailsConfirmed, setDirectorDetailsConfirmed] = useState(false)
+
+  const handleEditSection = (section: string) => {
+    switch(section) {
+      case 'account':
+        goToStep(0) // Account Verification
+        break;
+      case 'ekyc':
+        goToStep(1) // eKYC
+        break;
+      case 'company':
+        goToStep(2) // Company Details
+        break;
+      case 'director':
+        goToStep(3) // Director Details
+        break;
+    }
+  }
 
   const handleFinalSubmit = async () => {
     try {
@@ -97,6 +115,20 @@ const ConfirmationSection = ({ onNext, onPrev }: ConfirmationProps) => {
     return file.name || 'File uploaded'
   }
 
+  const renderCardTitle = (title: string, section: string) => (
+    <div className="flex justify-between items-center">
+      <span>{title}</span>
+      <Button 
+        type="link" 
+        icon={<EditOutlined />} 
+        onClick={() => handleEditSection(section)}
+        className="p-0 h-auto"
+      >
+        Edit
+      </Button>
+    </div>
+  )
+
   return (
     <React.Fragment>
       <div className="mb-8 text-center">
@@ -110,7 +142,10 @@ const ConfirmationSection = ({ onNext, onPrev }: ConfirmationProps) => {
 
       <div className="grid gap-6">
         {/* Account Information */}
-        <Card title="Account Information" size="small">
+        <Card 
+          title={renderCardTitle("Account Information", "account")} 
+          size="small"
+        >
           <Descriptions column={1} bordered size="small">
             <Descriptions.Item label="Email Address">{formData.email}</Descriptions.Item>
             <Descriptions.Item label="Email Status">
@@ -122,7 +157,10 @@ const ConfirmationSection = ({ onNext, onPrev }: ConfirmationProps) => {
         </Card>
 
         {/* eKYC Information */}
-        <Card title="eKYC Information" size="small">
+        <Card 
+          title={renderCardTitle("eKYC Information", "ekyc")} 
+          size="small"
+        >
           <Descriptions column={2} bordered size="small">
             <Descriptions.Item label="PAN Number">{formData.panNumber}</Descriptions.Item>
             <Descriptions.Item label="PAN Holder Name">{formData.panHolderName || 'Not verified'}</Descriptions.Item>
@@ -132,7 +170,10 @@ const ConfirmationSection = ({ onNext, onPrev }: ConfirmationProps) => {
         </Card>
 
         {/* Company Information */}
-        <Card title="Company Information" size="small">
+        <Card 
+          title={renderCardTitle("Company Information", "company")} 
+          size="small"
+        >
           <Descriptions column={2} bordered size="small">
             <Descriptions.Item label="Company Name">{formData.companyName}</Descriptions.Item>
             <Descriptions.Item label="City">{formData.city}</Descriptions.Item>
@@ -143,7 +184,10 @@ const ConfirmationSection = ({ onNext, onPrev }: ConfirmationProps) => {
         </Card>
 
         {/* Director Information */}
-        <Card title="Director Information" size="small">
+        <Card 
+          title={renderCardTitle("Director Information", "director")} 
+          size="small"
+        >
           <Descriptions column={2} bordered size="small">
             <Descriptions.Item label="Full Name">{formData.name}</Descriptions.Item>
             <Descriptions.Item label="Designation">{formData.designation}</Descriptions.Item>
@@ -186,11 +230,7 @@ const ConfirmationSection = ({ onNext, onPrev }: ConfirmationProps) => {
         </Card>
 
         {/* Action Buttons */}
-        <div className="flex justify-between items-center p-6 bg-slate-50 rounded-lg">
-          <Button size="large" onClick={onPrev}>
-            Previous
-          </Button>
-          
+        <div className="flex justify-center items-center p-6 bg-slate-50 rounded-lg">
           <div className="text-center">
             <Button 
               type="primary" 
@@ -198,7 +238,7 @@ const ConfirmationSection = ({ onNext, onPrev }: ConfirmationProps) => {
               loading={isSubmitting}
               onClick={handleFinalSubmit}
               disabled={!termsAccepted || !directorDetailsConfirmed}
-              className={`bg-gradient-to-r from-indigo-500 to-purple-600 border-none px-8 text-base ${
+              className={`bg-gradient-to-r from-indigo-500 to-purple-600 border-none px-10 text-base ${
                 (!termsAccepted || !directorDetailsConfirmed) ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
