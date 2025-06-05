@@ -38,27 +38,21 @@ const SubmissionSuccess = ({ onPrev }: SubmissionSuccessProps) => {
               </Button>,
               <Button
                 key="new"
-                onClick={() => {
-                  // Reload the page to start a new onboarding process
-                  window.location.reload()
-                }}
+                onClick={() => window.location.reload()}
               >
                 Start New Application
               </Button>,
             ]}
           >
-            <Title level={4} className="mb-4">
-              What happens next?
-            </Title>
-            <List
-              dataSource={nextSteps}
-              renderItem={(item) => (
-                <List.Item className="text-left">
-                  {item}
-                </List.Item>
-              )}
-              className="text-left"
-            />
+            <div className="mt-6 text-left">
+              <Title level={4}>What happens next?</Title>
+              <List
+                dataSource={nextSteps}
+                renderItem={(item) => (
+                  <List.Item className="text-gray-700">{item}</List.Item>
+                )}
+              />
+            </div>
           </Result>
         </Card>
       </div>
@@ -66,4 +60,4 @@ const SubmissionSuccess = ({ onPrev }: SubmissionSuccessProps) => {
   )
 }
 
-export default SubmissionSuccess 
+export default SubmissionSuccess
