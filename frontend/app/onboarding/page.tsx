@@ -68,7 +68,7 @@ const OnboardingContent = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-6xl mx-auto px-4">
         <div className="text-center mb-8">
           <div className="flex justify-center items-center mb-4">
             <img
@@ -95,7 +95,7 @@ const OnboardingContent = () => {
               </div>
             ) : (
               <div>
-                {currentStep === 0 && <AccountVerification onNext={nextStep} />}
+                {currentStep === 0 && <AccountVerification onNext={nextStep} onPrev={() => {}} />}
                 {currentStep === 1 && <EKYCForm onNext={nextStep} onPrev={prevStep} />}
                 {currentStep === 2 && <CompanyDetailsForm onNext={nextStep} onPrev={prevStep} />}
                 {currentStep === 3 && <DirectorDetailsForm onNext={nextStep} onPrev={prevStep} />}
