@@ -170,6 +170,7 @@ const EKYCForm = ({ onNext, onPrev }: EKYCFormProps) => {
           { required: true, message: 'Please input your GST number!' },
           { pattern: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, message: 'Please enter a valid GST number' }
         ]}
+        help={tradeName ? <span style={{ color: '#52c41a' }}>Trade Name: {tradeName}</span> : null}
       >
         <Input 
           placeholder="Enter your GST number" 
@@ -180,13 +181,6 @@ const EKYCForm = ({ onNext, onPrev }: EKYCFormProps) => {
           suffix={isVerifying ? <Spin indicator={<LoadingOutlined style={{ fontSize: 16 }} spin />} /> : null}
         />
       </Form.Item>
-
-      {tradeName && (
-        <div className="mb-4 p-3 bg-gray-50 rounded border border-gray-200">
-          <p className="text-sm text-gray-600">Trade Name:</p>
-          <p className="font-medium">{tradeName}</p>
-        </div>
-      )}
 
       <Form.Item
         name="gstDocument"
