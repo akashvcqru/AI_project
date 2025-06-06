@@ -2,7 +2,7 @@ import { Form, Input, Button, Upload, message, Spin } from 'antd'
 import { UploadOutlined, LoadingOutlined } from '@ant-design/icons'
 import type { UploadProps } from 'antd'
 import { useState, useEffect } from 'react'
-import { useOnboarding } from '../../contexts/OnboardingContext'
+import { useOnboarding, type FormData } from '../../contexts/OnboardingContext'
 
 interface EKYCFormProps {
   onNext: () => void
@@ -29,6 +29,16 @@ interface GSTVerificationResponse {
   }
 }
 
+interface FormDataUpdates {
+  tradeName?: string
+  companyName?: string
+  address?: string
+  city?: string
+  state?: string
+  pincode?: string
+  gstDocument?: any
+}
+
 const EKYCForm = ({ onNext, onPrev }: EKYCFormProps) => {
   const { formData, updateFormData, saveProgress } = useOnboarding()
   const [form] = Form.useForm()
@@ -53,6 +63,19 @@ const EKYCForm = ({ onNext, onPrev }: EKYCFormProps) => {
   const verifyGST = async (gstNumber: string) => {
     try {
       setIsVerifying(true)
+      console.log('Starting GST verification for:', gstNumber)
+      
+      const requestBody = {
+        mode: 'sync',
+        data: {
+          business_gstin_number: gstNumber,
+          consent: 'Y',
+          consent_text: 'I hear by declare my consent agreement for fetching my information via ZOOP API'
+        },
+        task_id: crypto.randomUUID()
+      }
+      console.log('Request body:', requestBody)
+
       const response = await fetch('https://live.zoop.one/api/v1/in/merchant/gstin/lite', {
         method: 'POST',
         headers: {
@@ -60,27 +83,24 @@ const EKYCForm = ({ onNext, onPrev }: EKYCFormProps) => {
           'api-key': 'W5Q2V99-JFC4D4D-QS0PG29-C6DNJYR',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          mode: 'sync',
-          data: {
-            business_gstin_number: gstNumber,
-            consent: 'Y',
-            consent_text: 'I hear by declare my consent agreement for fetching my information via ZOOP API'
-          },
-          task_id: crypto.randomUUID()
-        })
+        body: JSON.stringify(requestBody)
       })
 
+      console.log('API Response status:', response.status)
       const data: GSTVerificationResponse = await response.json()
+      console.log('API Response data:', data)
       
       if (data.success && data.result) {
         const { trade_name, primary_business_address } = data.result
+        console.log('Trade name:', trade_name)
+        console.log('Business address:', primary_business_address)
+        
         setTradeName(trade_name)
         setIsGstVerified(true)
         
         // Update form data with business details including trade name
-        const updates: any = {
-          tradeName: trade_name, // Store trade name in form data
+        const updates: Partial<FormData> = {
+          tradeName: trade_name,
           companyName: !formData.companyName ? trade_name : formData.companyName,
           address: !formData.address ? primary_business_address.full_address : formData.address,
           city: !formData.city ? primary_business_address.city || primary_business_address.district : formData.city,
@@ -88,10 +108,15 @@ const EKYCForm = ({ onNext, onPrev }: EKYCFormProps) => {
           pincode: !formData.pincode ? primary_business_address.pincode : formData.pincode
         }
         
-        // Update all fields at once
-        Object.entries(updates).forEach(([key, value]) => {
-          updateFormData(key, value)
-        })
+        console.log('Updating form data with:', updates)
+        
+        // Update each field individually
+        if (updates.tradeName) updateFormData('tradeName', updates.tradeName)
+        if (updates.companyName) updateFormData('companyName', updates.companyName)
+        if (updates.address) updateFormData('address', updates.address)
+        if (updates.city) updateFormData('city', updates.city)
+        if (updates.state) updateFormData('state', updates.state)
+        if (updates.pincode) updateFormData('pincode', updates.pincode)
         
         // Clear GST document if it was previously uploaded
         if (formData.gstDocument) {
@@ -101,15 +126,17 @@ const EKYCForm = ({ onNext, onPrev }: EKYCFormProps) => {
         
         message.success('GST verification successful')
       } else {
+        console.log('GST verification failed:', data)
         setTradeName('')
         setIsGstVerified(false)
-        updateFormData('tradeName', '') // Clear trade name in form data
+        updateFormData('tradeName', '')
         message.error('Invalid GST number')
       }
     } catch (error) {
+      console.error('GST verification error:', error)
       setTradeName('')
       setIsGstVerified(false)
-      updateFormData('tradeName', '') // Clear trade name in form data
+      updateFormData('tradeName', '')
       message.error('Failed to verify GST number')
     } finally {
       setIsVerifying(false)
@@ -118,18 +145,21 @@ const EKYCForm = ({ onNext, onPrev }: EKYCFormProps) => {
 
   const handleGstChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toUpperCase()
+    console.log('GST input changed:', value)
     updateFormData('gstNumber', value)
     form.setFieldsValue({ gstNumber: value })
     
     // Reset verification status when GST number changes
     if (value !== formData.gstNumber) {
+      console.log('Resetting verification status')
       setIsGstVerified(null)
       setTradeName('')
-      updateFormData('tradeName', '') // Clear trade name in form data
+      updateFormData('tradeName', '')
     }
     
     // Verify GST when a valid GST number is entered
     if (value.length === 15 && /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(value)) {
+      console.log('Valid GST number format detected, starting verification')
       await verifyGST(value)
     }
   }

@@ -89,42 +89,6 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
     }
   }
 
-  const handlePanChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.toUpperCase()
-    updateFormData('panNumber', value)
-    form.setFieldsValue({ panNumber: value })
-    
-    // Reset verification status when PAN number changes
-    if (value !== formData.panNumber) {
-      setIsPanVerified(null)
-      updateFormData('isPanVerified', false)
-    }
-    
-    // Verify PAN when both PAN number and name are entered
-    const name = form.getFieldValue('name')
-    if (value.length === 10 && /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value) && name) {
-      await verifyPAN(value, name)
-    }
-  }
-
-  const handleNameChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    updateFormData('name', value)
-    form.setFieldsValue({ name: value })
-    
-    // Reset verification status when name changes
-    if (value !== formData.name) {
-      setIsPanVerified(null)
-      updateFormData('isPanVerified', false)
-    }
-    
-    // Verify PAN when both PAN number and name are entered
-    const panNumber = form.getFieldValue('panNumber')
-    if (panNumber && panNumber.length === 10 && /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panNumber) && value) {
-      await verifyPAN(panNumber, value)
-    }
-  }
-
   const handleSubmit = async (values: any) => {
     try {
       // Update form data with current values
@@ -243,40 +207,74 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
   return (
     <Form form={form} onFinish={handleSubmit} layout="vertical">
       <Form.Item
-        name="panNumber"
-        label="PAN Number"
+        name="name"
+        label="Full Name"
         rules={[
-          { required: true, message: 'Please input your PAN number!' },
-          { pattern: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, message: 'Please enter a valid PAN number' }
+          { required: true, message: 'Please input your full name!' },
+          { min: 3, message: 'Name must be at least 3 characters long' }
         ]}
-        help={
-          isPanVerified === true ? 
-            <span style={{ color: '#52c41a' }}>PAN verified successfully</span> : 
-            isPanVerified === false ? 
-              <span style={{ color: '#ff4d4f' }}>PAN verification failed. Please check the details.</span> : 
-              null
-        }
+        help={isPanVerified === true ? (
+          <span className="text-green-600">Name verified with PAN</span>
+        ) : isPanVerified === false ? (
+          <span className="text-red-600">Name verification failed</span>
+        ) : undefined}
+        validateStatus={isPanVerified === true ? "success" : isPanVerified === false ? "error" : undefined}
       >
         <Input 
-          placeholder="Enter PAN number" 
-          style={{ textTransform: 'uppercase' }} 
-          value={formData.panNumber}
-          onChange={handlePanChange}
-          disabled={isVerifying || isPanVerified === true}
-          suffix={isVerifying ? <Spin indicator={<LoadingOutlined style={{ fontSize: 16 }} spin />} /> : null}
+          placeholder="Enter your full name" 
+          value={formData.name}
+          onChange={(e) => {
+            const value = e.target.value
+            updateFormData('name', value)
+            form.setFieldsValue({ name: value })
+            // Reset verification status when name changes
+            if (isPanVerified !== null) {
+              setIsPanVerified(null)
+              updateFormData('isPanVerified', false)
+            }
+            // Trigger verification if PAN is already entered
+            if (formData.panNumber && value.length >= 3) {
+              verifyPAN(formData.panNumber, value)
+            }
+          }}
+          disabled={isPanVerified === true}
         />
       </Form.Item>
 
       <Form.Item
-        name="name"
-        label="Full Name"
-        rules={[{ required: true, message: 'Please input director name!' }]}
+        name="panNumber"
+        label="PAN Number"
+        rules={[
+          { required: true, message: 'Please input your PAN number!' },
+          { pattern: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, message: 'Please enter a valid PAN number (e.g., ABCDE1234F)' }
+        ]}
+        help={isPanVerified === true ? (
+          <span className="text-green-600">PAN verified successfully</span>
+        ) : isPanVerified === false ? (
+          <span className="text-red-600">PAN verification failed</span>
+        ) : undefined}
+        validateStatus={isPanVerified === true ? "success" : isPanVerified === false ? "error" : undefined}
       >
         <Input 
-          placeholder="Enter full name" 
-          value={formData.name}
-          onChange={handleNameChange}
-          disabled={isVerifying || isPanVerified === true}
+          placeholder="Enter your PAN number" 
+          maxLength={10}
+          value={formData.panNumber}
+          onChange={(e) => {
+            const value = e.target.value.toUpperCase()
+            updateFormData('panNumber', value)
+            form.setFieldsValue({ panNumber: value })
+            // Reset verification status when PAN changes
+            if (isPanVerified !== null) {
+              setIsPanVerified(null)
+              updateFormData('isPanVerified', false)
+            }
+            // Trigger verification if name is already entered
+            if (formData.name && formData.name.length >= 3 && value.length === 10) {
+              verifyPAN(value, formData.name)
+            }
+          }}
+          disabled={isPanVerified === true}
+          suffix={isVerifying ? <Spin size="small" /> : null}
         />
       </Form.Item>
 

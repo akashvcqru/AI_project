@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 
-interface FormData {
+export interface FormData {
   // Account Verification
   email: string
   isEmailVerified: boolean
