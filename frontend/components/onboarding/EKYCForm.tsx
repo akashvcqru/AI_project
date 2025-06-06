@@ -1,5 +1,5 @@
-import { Form, Input, Button, Upload, message } from 'antd'
-import { UploadOutlined } from '@ant-design/icons'
+import { Form, Input, Button, Upload, message, Spin } from 'antd'
+import { UploadOutlined, LoadingOutlined } from '@ant-design/icons'
 import type { UploadProps } from 'antd'
 import { useState, useEffect } from 'react'
 import { useOnboarding } from '../../contexts/OnboardingContext'
@@ -9,9 +9,21 @@ interface EKYCFormProps {
   onPrev: () => void
 }
 
+interface GSTVerificationResponse {
+  success: boolean
+  result?: {
+    trade_name: string
+    legal_name: string
+    business_constitution: string
+    current_registration_status: string
+  }
+}
+
 const EKYCForm = ({ onNext, onPrev }: EKYCFormProps) => {
   const { formData, updateFormData, saveProgress } = useOnboarding()
   const [form] = Form.useForm()
+  const [tradeName, setTradeName] = useState<string>('')
+  const [isVerifying, setIsVerifying] = useState(false)
 
   // Pre-fill form with existing data
   useEffect(() => {
@@ -20,10 +32,59 @@ const EKYCForm = ({ onNext, onPrev }: EKYCFormProps) => {
     })
   }, [form, formData.gstNumber])
 
-  const handleGstChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const verifyGST = async (gstNumber: string) => {
+    try {
+      setIsVerifying(true)
+      const response = await fetch('https://live.zoop.one/api/v1/in/merchant/gstin/lite', {
+        method: 'POST',
+        headers: {
+          'app-id': '648d7d9a22658f001d0193ac',
+          'api-key': 'W5Q2V99-JFC4D4D-QS0PG29-C6DNJYR',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          mode: 'sync',
+          data: {
+            business_gstin_number: gstNumber,
+            consent: 'Y',
+            consent_text: 'I hear by declare my consent agreement for fetching my information via ZOOP API'
+          },
+          task_id: crypto.randomUUID()
+        })
+      })
+
+      const data: GSTVerificationResponse = await response.json()
+      
+      if (data.success && data.result) {
+        setTradeName(data.result.trade_name)
+        // Update company name in form data if it's empty
+        if (!formData.companyName) {
+          updateFormData('companyName', data.result.trade_name)
+        }
+        message.success('GST verification successful')
+      } else {
+        setTradeName('')
+        message.error('Invalid GST number')
+      }
+    } catch (error) {
+      setTradeName('')
+      message.error('Failed to verify GST number')
+    } finally {
+      setIsVerifying(false)
+    }
+  }
+
+  const handleGstChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toUpperCase()
     updateFormData('gstNumber', value)
     form.setFieldsValue({ gstNumber: value })
+    
+    // Verify GST when a valid GST number is entered
+    if (value.length === 15 && /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(value)) {
+      await verifyGST(value)
+    } else {
+      setTradeName('')
+    }
   }
 
   const handleSubmit = async (values: any) => {
@@ -115,8 +176,17 @@ const EKYCForm = ({ onNext, onPrev }: EKYCFormProps) => {
           style={{ textTransform: 'uppercase' }} 
           value={formData.gstNumber}
           onChange={handleGstChange}
+          disabled={isVerifying}
+          suffix={isVerifying ? <Spin indicator={<LoadingOutlined style={{ fontSize: 16 }} spin />} /> : null}
         />
       </Form.Item>
+
+      {tradeName && (
+        <div className="mb-4 p-3 bg-gray-50 rounded border border-gray-200">
+          <p className="text-sm text-gray-600">Trade Name:</p>
+          <p className="font-medium">{tradeName}</p>
+        </div>
+      )}
 
       <Form.Item
         name="gstDocument"
