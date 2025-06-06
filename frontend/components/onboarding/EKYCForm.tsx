@@ -32,21 +32,23 @@ interface GSTVerificationResponse {
 const EKYCForm = ({ onNext, onPrev }: EKYCFormProps) => {
   const { formData, updateFormData, saveProgress } = useOnboarding()
   const [form] = Form.useForm()
-  const [tradeName, setTradeName] = useState<string>('')
+  const [tradeName, setTradeName] = useState<string>(formData.tradeName || '')
   const [isVerifying, setIsVerifying] = useState(false)
-  const [isGstVerified, setIsGstVerified] = useState<boolean | null>(null) // null = not checked, true = verified, false = failed
+  const [isGstVerified, setIsGstVerified] = useState<boolean | null>(formData.gstNumber && formData.tradeName ? true : null)
 
-  // Pre-fill form with existing data
+  // Pre-fill form with existing data and restore verification status
   useEffect(() => {
     form.setFieldsValue({
       gstNumber: formData.gstNumber,
       gstDocument: formData.gstDocument
     })
-    // If we have a trade name, GST was previously verified
-    if (formData.gstNumber && tradeName) {
+
+    // Restore verification status if we have both GST number and trade name
+    if (formData.gstNumber && formData.tradeName) {
+      setTradeName(formData.tradeName)
       setIsGstVerified(true)
     }
-  }, [form, formData.gstNumber, formData.gstDocument, tradeName])
+  }, [form, formData.gstNumber, formData.gstDocument, formData.tradeName])
 
   const verifyGST = async (gstNumber: string) => {
     try {
@@ -76,8 +78,9 @@ const EKYCForm = ({ onNext, onPrev }: EKYCFormProps) => {
         setTradeName(trade_name)
         setIsGstVerified(true)
         
-        // Update form data with business details
+        // Update form data with business details including trade name
         const updates: any = {
+          tradeName: trade_name, // Store trade name in form data
           companyName: !formData.companyName ? trade_name : formData.companyName,
           address: !formData.address ? primary_business_address.full_address : formData.address,
           city: !formData.city ? primary_business_address.city || primary_business_address.district : formData.city,
@@ -86,11 +89,9 @@ const EKYCForm = ({ onNext, onPrev }: EKYCFormProps) => {
         }
         
         // Update all fields at once
-        updateFormData('companyName', updates.companyName)
-        updateFormData('address', updates.address)
-        updateFormData('city', updates.city)
-        updateFormData('state', updates.state)
-        updateFormData('pincode', updates.pincode)
+        Object.entries(updates).forEach(([key, value]) => {
+          updateFormData(key, value)
+        })
         
         // Clear GST document if it was previously uploaded
         if (formData.gstDocument) {
@@ -102,11 +103,13 @@ const EKYCForm = ({ onNext, onPrev }: EKYCFormProps) => {
       } else {
         setTradeName('')
         setIsGstVerified(false)
+        updateFormData('tradeName', '') // Clear trade name in form data
         message.error('Invalid GST number')
       }
     } catch (error) {
       setTradeName('')
       setIsGstVerified(false)
+      updateFormData('tradeName', '') // Clear trade name in form data
       message.error('Failed to verify GST number')
     } finally {
       setIsVerifying(false)
@@ -119,8 +122,11 @@ const EKYCForm = ({ onNext, onPrev }: EKYCFormProps) => {
     form.setFieldsValue({ gstNumber: value })
     
     // Reset verification status when GST number changes
-    setIsGstVerified(null)
-    setTradeName('')
+    if (value !== formData.gstNumber) {
+      setIsGstVerified(null)
+      setTradeName('')
+      updateFormData('tradeName', '') // Clear trade name in form data
+    }
     
     // Verify GST when a valid GST number is entered
     if (value.length === 15 && /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(value)) {

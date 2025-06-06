@@ -11,6 +11,7 @@ interface FormData {
   // eKYC Details
   gstNumber: string
   gstDocument: any
+  tradeName: string
   
   // Company Details
   companyName: string
@@ -52,6 +53,7 @@ const initialFormData: FormData = {
   // eKYC Details
   gstNumber: '',
   gstDocument: null,
+  tradeName: '',
   
   // Company Details
   companyName: '',
