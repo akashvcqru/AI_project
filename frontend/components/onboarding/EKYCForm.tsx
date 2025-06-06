@@ -34,13 +34,19 @@ const EKYCForm = ({ onNext, onPrev }: EKYCFormProps) => {
   const [form] = Form.useForm()
   const [tradeName, setTradeName] = useState<string>('')
   const [isVerifying, setIsVerifying] = useState(false)
+  const [isGstVerified, setIsGstVerified] = useState<boolean | null>(null) // null = not checked, true = verified, false = failed
 
   // Pre-fill form with existing data
   useEffect(() => {
     form.setFieldsValue({
-      gstNumber: formData.gstNumber
+      gstNumber: formData.gstNumber,
+      gstDocument: formData.gstDocument
     })
-  }, [form, formData.gstNumber])
+    // If we have a trade name, GST was previously verified
+    if (formData.gstNumber && tradeName) {
+      setIsGstVerified(true)
+    }
+  }, [form, formData.gstNumber, formData.gstDocument, tradeName])
 
   const verifyGST = async (gstNumber: string) => {
     try {
@@ -68,6 +74,7 @@ const EKYCForm = ({ onNext, onPrev }: EKYCFormProps) => {
       if (data.success && data.result) {
         const { trade_name, primary_business_address } = data.result
         setTradeName(trade_name)
+        setIsGstVerified(true)
         
         // Update form data with business details
         const updates: any = {
@@ -85,13 +92,21 @@ const EKYCForm = ({ onNext, onPrev }: EKYCFormProps) => {
         updateFormData('state', updates.state)
         updateFormData('pincode', updates.pincode)
         
+        // Clear GST document if it was previously uploaded
+        if (formData.gstDocument) {
+          updateFormData('gstDocument', null)
+          form.setFieldsValue({ gstDocument: null })
+        }
+        
         message.success('GST verification successful')
       } else {
         setTradeName('')
+        setIsGstVerified(false)
         message.error('Invalid GST number')
       }
     } catch (error) {
       setTradeName('')
+      setIsGstVerified(false)
       message.error('Failed to verify GST number')
     } finally {
       setIsVerifying(false)
@@ -103,11 +118,13 @@ const EKYCForm = ({ onNext, onPrev }: EKYCFormProps) => {
     updateFormData('gstNumber', value)
     form.setFieldsValue({ gstNumber: value })
     
+    // Reset verification status when GST number changes
+    setIsGstVerified(null)
+    setTradeName('')
+    
     // Verify GST when a valid GST number is entered
     if (value.length === 15 && /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(value)) {
       await verifyGST(value)
-    } else {
-      setTradeName('')
     }
   }
 
@@ -194,7 +211,13 @@ const EKYCForm = ({ onNext, onPrev }: EKYCFormProps) => {
           { required: true, message: 'Please input your GST number!' },
           { pattern: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, message: 'Please enter a valid GST number' }
         ]}
-        help={tradeName ? <span style={{ color: '#52c41a' }}>Trade Name: {tradeName}</span> : null}
+        help={
+          tradeName ? 
+            <span style={{ color: '#52c41a' }}>Trade Name: {tradeName}</span> : 
+            isGstVerified === false ? 
+              <span style={{ color: '#ff4d4f' }}>GST verification failed. Please upload your GST certificate.</span> : 
+              null
+        }
       >
         <Input 
           placeholder="Enter your GST number" 
@@ -206,16 +229,18 @@ const EKYCForm = ({ onNext, onPrev }: EKYCFormProps) => {
         />
       </Form.Item>
 
-      <Form.Item
-        name="gstDocument"
-        label="GST Registration Certificate"
-        rules={[{ required: true, message: 'Please upload your GST registration certificate!' }]}
-        extra="Supported formats: JPG, PNG, PDF (Max size: 2MB)"
-      >
-        <Upload {...uploadProps}>
-          <Button icon={<UploadOutlined />}>Upload GST Certificate</Button>
-        </Upload>
-      </Form.Item>
+      {isGstVerified === false && (
+        <Form.Item
+          name="gstDocument"
+          label="GST Registration Certificate"
+          rules={[{ required: true, message: 'Please upload your GST registration certificate!' }]}
+          extra="Required when GST verification fails. Supported formats: JPG, PNG, PDF (Max size: 2MB)"
+        >
+          <Upload {...uploadProps}>
+            <Button icon={<UploadOutlined />}>Upload GST Certificate</Button>
+          </Upload>
+        </Form.Item>
+      )}
 
       <div className="flex justify-end gap-4">
         <Button onClick={onPrev}>Previous</Button>
