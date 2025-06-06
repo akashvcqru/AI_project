@@ -16,6 +16,16 @@ interface GSTVerificationResponse {
     legal_name: string
     business_constitution: string
     current_registration_status: string
+    primary_business_address: {
+      full_address: string
+      building_name: string
+      building_number: string
+      street: string
+      city: string
+      district: string
+      state_code: string
+      pincode: string
+    }
   }
 }
 
@@ -56,11 +66,25 @@ const EKYCForm = ({ onNext, onPrev }: EKYCFormProps) => {
       const data: GSTVerificationResponse = await response.json()
       
       if (data.success && data.result) {
-        setTradeName(data.result.trade_name)
-        // Update company name in form data if it's empty
-        if (!formData.companyName) {
-          updateFormData('companyName', data.result.trade_name)
+        const { trade_name, primary_business_address } = data.result
+        setTradeName(trade_name)
+        
+        // Update form data with business details
+        const updates: any = {
+          companyName: !formData.companyName ? trade_name : formData.companyName,
+          address: !formData.address ? primary_business_address.full_address : formData.address,
+          city: !formData.city ? primary_business_address.city || primary_business_address.district : formData.city,
+          state: !formData.state ? primary_business_address.state_code : formData.state,
+          pincode: !formData.pincode ? primary_business_address.pincode : formData.pincode
         }
+        
+        // Update all fields at once
+        updateFormData('companyName', updates.companyName)
+        updateFormData('address', updates.address)
+        updateFormData('city', updates.city)
+        updateFormData('state', updates.state)
+        updateFormData('pincode', updates.pincode)
+        
         message.success('GST verification successful')
       } else {
         setTradeName('')
