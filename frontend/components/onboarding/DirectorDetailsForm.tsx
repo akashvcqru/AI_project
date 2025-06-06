@@ -1,7 +1,7 @@
-import { Form, Input, Button, message, Upload } from 'antd'
-import { UploadOutlined } from '@ant-design/icons'
+import { Form, Input, Button, message, Upload, Spin } from 'antd'
+import { UploadOutlined, LoadingOutlined } from '@ant-design/icons'
 import type { UploadProps } from 'antd'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useOnboarding } from '../../contexts/OnboardingContext'
 
 interface DirectorDetailsFormProps {
@@ -9,33 +9,128 @@ interface DirectorDetailsFormProps {
   onPrev: () => void
 }
 
+interface PANVerificationResponse {
+  success: boolean
+  result?: {
+    pan_number: string
+    pan_status: string
+    user_full_name: string
+    name_match_score: string
+    pan_type: string
+  }
+}
+
 const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
   const { formData, updateFormData, saveProgress } = useOnboarding()
   const [form] = Form.useForm()
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [isPanVerified, setIsPanVerified] = useState<boolean | null>(formData.panNumber && formData.isPanVerified ? true : null)
 
   // Pre-fill form with existing data
   useEffect(() => {
     form.setFieldsValue({
       name: formData.name,
+      panNumber: formData.panNumber,
       aadharNumber: formData.aadharNumber,
       designation: formData.designation,
-      address: formData.directorAddress
+      directorAddress: formData.directorAddress
     })
   }, [form, formData])
 
-  const handleFieldChange = (field: string, value: string) => {
-    const mappedField = field === 'address' ? 'directorAddress' : field
-    updateFormData(mappedField as keyof typeof formData, value)
-    form.setFieldsValue({ [field]: value })
+  const verifyPAN = async (panNumber: string, name: string) => {
+    try {
+      setIsVerifying(true)
+      const response = await fetch('https://live.zoop.one/api/v1/in/identity/pan/lite', {
+        method: 'POST',
+        headers: {
+          'app-id': '648d7d9a22658f001d0193ac',
+          'api-key': 'W5Q2V99-JFC4D4D-QS0PG29-C6DNJYR',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          mode: 'sync',
+          data: {
+            customer_pan_number: panNumber,
+            pan_holder_name: name,
+            consent: 'Y',
+            consent_text: 'I hear by declare my consent agreement for fetching my information via ZOOP API'
+          },
+          task_id: crypto.randomUUID()
+        })
+      })
+
+      const data: PANVerificationResponse = await response.json()
+      
+      if (data.success && data.result) {
+        const { pan_status, user_full_name, name_match_score } = data.result
+        
+        if (pan_status === 'VALID' && parseFloat(name_match_score) >= 80) {
+          setIsPanVerified(true)
+          updateFormData('isPanVerified', true)
+          updateFormData('name', user_full_name) // Update name with verified name
+          form.setFieldsValue({ name: user_full_name })
+          message.success('PAN verification successful')
+        } else {
+          setIsPanVerified(false)
+          updateFormData('isPanVerified', false)
+          message.error('PAN verification failed: Name mismatch or invalid PAN')
+        }
+      } else {
+        setIsPanVerified(false)
+        updateFormData('isPanVerified', false)
+        message.error('Invalid PAN number')
+      }
+    } catch (error) {
+      setIsPanVerified(false)
+      updateFormData('isPanVerified', false)
+      message.error('Failed to verify PAN')
+    } finally {
+      setIsVerifying(false)
+    }
+  }
+
+  const handlePanChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.toUpperCase()
+    updateFormData('panNumber', value)
+    form.setFieldsValue({ panNumber: value })
+    
+    // Reset verification status when PAN number changes
+    if (value !== formData.panNumber) {
+      setIsPanVerified(null)
+      updateFormData('isPanVerified', false)
+    }
+    
+    // Verify PAN when both PAN number and name are entered
+    const name = form.getFieldValue('name')
+    if (value.length === 10 && /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value) && name) {
+      await verifyPAN(value, name)
+    }
+  }
+
+  const handleNameChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    updateFormData('name', value)
+    form.setFieldsValue({ name: value })
+    
+    // Reset verification status when name changes
+    if (value !== formData.name) {
+      setIsPanVerified(null)
+      updateFormData('isPanVerified', false)
+    }
+    
+    // Verify PAN when both PAN number and name are entered
+    const panNumber = form.getFieldValue('panNumber')
+    if (panNumber && panNumber.length === 10 && /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panNumber) && value) {
+      await verifyPAN(panNumber, value)
+    }
   }
 
   const handleSubmit = async (values: any) => {
     try {
-      // Update all form data with proper field mapping
-      updateFormData('name', values.name)
-      updateFormData('aadharNumber', values.aadharNumber)
-      updateFormData('designation', values.designation)
-      updateFormData('directorAddress', values.address)
+      // Update form data with current values
+      Object.entries(values).forEach(([key, value]) => {
+        updateFormData(key, value)
+      })
       
       // Save progress
       saveProgress()
@@ -137,6 +232,31 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
   return (
     <Form form={form} onFinish={handleSubmit} layout="vertical">
       <Form.Item
+        name="panNumber"
+        label="PAN Number"
+        rules={[
+          { required: true, message: 'Please input your PAN number!' },
+          { pattern: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, message: 'Please enter a valid PAN number' }
+        ]}
+        help={
+          isPanVerified === true ? 
+            <span style={{ color: '#52c41a' }}>PAN verified successfully</span> : 
+            isPanVerified === false ? 
+              <span style={{ color: '#ff4d4f' }}>PAN verification failed. Please check the details.</span> : 
+              null
+        }
+      >
+        <Input 
+          placeholder="Enter PAN number" 
+          style={{ textTransform: 'uppercase' }} 
+          value={formData.panNumber}
+          onChange={handlePanChange}
+          disabled={isVerifying || isPanVerified === true}
+          suffix={isVerifying ? <Spin indicator={<LoadingOutlined style={{ fontSize: 16 }} spin />} /> : null}
+        />
+      </Form.Item>
+
+      <Form.Item
         name="name"
         label="Full Name"
         rules={[{ required: true, message: 'Please input director name!' }]}
@@ -144,7 +264,8 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
         <Input 
           placeholder="Enter full name" 
           value={formData.name}
-          onChange={(e) => handleFieldChange('name', e.target.value)}
+          onChange={handleNameChange}
+          disabled={isVerifying || isPanVerified === true}
         />
       </Form.Item>
 
@@ -160,7 +281,11 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
           placeholder="Enter your Aadhar number" 
           maxLength={12} 
           value={formData.aadharNumber}
-          onChange={(e) => handleFieldChange('aadharNumber', e.target.value.replace(/\D/g, ''))}
+          onChange={(e) => {
+            const value = e.target.value.replace(/\D/g, '')
+            updateFormData('aadharNumber', value)
+            form.setFieldsValue({ aadharNumber: value })
+          }}
         />
       </Form.Item>
 

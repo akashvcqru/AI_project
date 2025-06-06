@@ -22,6 +22,8 @@ interface FormData {
   
   // Director Details
   name: string
+  panNumber: string
+  isPanVerified: boolean
   aadharNumber: string
   designation: string
   directorAddress: string
@@ -64,6 +66,8 @@ const initialFormData: FormData = {
   
   // Director Details
   name: '',
+  panNumber: '',
+  isPanVerified: false,
   aadharNumber: '',
   designation: '',
   directorAddress: '',
