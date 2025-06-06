@@ -8,12 +8,10 @@ namespace UserOnboarding.API.Models
         public int UserId { get; set; }
 
         [Required]
-        [StringLength(10)]
-        public string PANNumber { get; set; } = string.Empty;
-
-        [Required]
         [StringLength(15)]
         public string GSTNumber { get; set; } = string.Empty;
+
+        public string GSTDocumentPath { get; set; } = string.Empty;
 
         public User User { get; set; } = null!;
     }

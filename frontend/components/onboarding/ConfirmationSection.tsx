@@ -112,7 +112,8 @@ const ConfirmationSection = ({ onNext, onPrev }: ConfirmationProps) => {
 
   const formatFileInfo = (file: any) => {
     if (!file) return 'Not uploaded'
-    return file.name || 'File uploaded'
+    if (typeof file === 'string') return file
+    return file.name || 'Uploaded'
   }
 
   const renderCardTitle = (title: string, section: string) => (
@@ -163,10 +164,8 @@ const ConfirmationSection = ({ onNext, onPrev }: ConfirmationProps) => {
           size="small"
         >
           <Descriptions column={2} bordered size="small">
-            <Descriptions.Item label="PAN Number">{formData.panNumber}</Descriptions.Item>
-            <Descriptions.Item label="PAN Holder Name">{formData.panHolderName || 'Not verified'}</Descriptions.Item>
             <Descriptions.Item label="GST Number">{formData.gstNumber}</Descriptions.Item>
-            <Descriptions.Item label="PAN Card">{formatFileInfo(formData.panCard)}</Descriptions.Item>
+            <Descriptions.Item label="GST Certificate">{formatFileInfo(formData.gstDocument)}</Descriptions.Item>
           </Descriptions>
         </Card>
 

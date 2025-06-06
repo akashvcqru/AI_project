@@ -53,12 +53,12 @@ namespace UserOnboarding.API.Controllers
 
             user.EKYC = new EKYC
             {
-                PANNumber = request.PANNumber,
-                GSTNumber = request.GSTNumber
+                GSTNumber = request.GSTNumber,
+                GSTDocumentPath = request.GSTDocumentPath
             };
 
             await _context.SaveChangesAsync();
-            return Ok(new { message = "EKYC details submitted successfully" });
+            return Ok(new { message = "eKYC details submitted successfully" });
         }
 
         [HttpPost("company")]
@@ -275,8 +275,8 @@ namespace UserOnboarding.API.Controllers
     public class EKYCRequest
     {
         public string Email { get; set; } = string.Empty;
-        public string PANNumber { get; set; } = string.Empty;
         public string GSTNumber { get; set; } = string.Empty;
+        public string GSTDocumentPath { get; set; } = string.Empty;
     }
 
     public class CompanyDetailsRequest

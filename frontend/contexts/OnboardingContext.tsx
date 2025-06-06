@@ -9,10 +9,8 @@ interface FormData {
   mobileNumber: string
   
   // eKYC Details
-  panNumber: string
-  panHolderName: string
   gstNumber: string
-  panCard: any
+  gstDocument: any
   
   // Company Details
   companyName: string
@@ -52,10 +50,8 @@ const initialFormData: FormData = {
   mobileNumber: '',
   
   // eKYC Details
-  panNumber: '',
-  panHolderName: '',
   gstNumber: '',
-  panCard: null,
+  gstDocument: null,
   
   // Company Details
   companyName: '',
@@ -219,7 +215,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       case 0: // Account Verification
         return formData.email && formData.isEmailVerified
       case 1: // eKYC
-        return formData.panNumber && formData.gstNumber && formData.panCard
+        return formData.gstNumber && formData.gstDocument
       case 2: // Company Details
         return formData.companyName && formData.address && formData.city && formData.state && formData.pincode
       case 3: // Director Details
