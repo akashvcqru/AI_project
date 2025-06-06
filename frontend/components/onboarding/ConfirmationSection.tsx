@@ -56,55 +56,30 @@ const ConfirmationSection = ({ onNext, onPrev }: ConfirmationProps) => {
       console.log('Final submission data:', submissionData)
 
       const token = localStorage.getItem('token')
-      const response = await fetch('http://localhost:5000/api/User/submit', {
+      const response = await fetch('https://localhost:7001/api/User/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
           ...(token && { Authorization: `Bearer ${token}` }),
         },
         body: JSON.stringify(submissionData),
       })
 
-      if (response.ok) {
-        // Handle successful response
-        const responseText = await response.text()
-        let responseData = {}
-        
-        if (responseText) {
-          try {
-            responseData = JSON.parse(responseText)
-          } catch (e) {
-            // If response is not JSON, that's okay
-            console.log('Non-JSON response received')
-          }
-        }
-        
-        message.success('Your request has been submitted and your documents are under process.')
-        
-        // Reset the form after successful submission
-        setTimeout(() => {
-          resetProgress()
-          // The parent component will handle showing the success page
-          onNext()
-        }, 2000)
-      } else {
-        // Handle error response
-        const responseText = await response.text()
-        let errorData = { message: 'Submission failed' }
-        
-        if (responseText) {
-          try {
-            errorData = JSON.parse(responseText)
-          } catch (e) {
-            console.log('Non-JSON error response received')
-          }
-        }
-        
-        message.error(errorData.message || 'Submission failed')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || 'Failed to submit onboarding data')
       }
+
+      const result = await response.json()
+      console.log('Submission response:', result)
+      
+      message.success('Onboarding submitted successfully!')
+      resetProgress()
+      onNext()
     } catch (error) {
-      message.error('Submission failed. Please try again.')
       console.error('Submission error:', error)
+      message.error(error instanceof Error ? error.message : 'Failed to submit onboarding data')
     } finally {
       setIsSubmitting(false)
     }
