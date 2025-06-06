@@ -33,7 +33,7 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
       panNumber: formData.panNumber,
       aadharNumber: formData.aadharNumber,
       designation: formData.designation,
-      directorAddress: formData.directorAddress
+      directorAddress: formData.directorAddress || ''
     })
   }, [form, formData])
 
@@ -128,8 +128,19 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
   const handleSubmit = async (values: any) => {
     try {
       // Update form data with current values
-      Object.entries(values).forEach(([key, value]) => {
-        updateFormData(key, value)
+      const updates = {
+        name: values.name,
+        panNumber: values.panNumber,
+        aadharNumber: values.aadharNumber,
+        designation: values.designation,
+        directorAddress: values.directorAddress,
+        photo: values.photo,
+        signature: values.signature
+      }
+
+      // Update each field individually
+      Object.entries(updates).forEach(([key, value]) => {
+        updateFormData(key as keyof typeof formData, value)
       })
       
       // Save progress
@@ -297,20 +308,27 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
         <Input 
           placeholder="Enter designation" 
           value={formData.designation}
-          onChange={(e) => handleFieldChange('designation', e.target.value)}
+          onChange={(e) => {
+            updateFormData('designation', e.target.value)
+            form.setFieldsValue({ designation: e.target.value })
+          }}
         />
       </Form.Item>
 
       <Form.Item
-        name="address"
+        name="directorAddress"
         label="Residential Address"
         rules={[{ required: true, message: 'Please input residential address!' }]}
       >
         <Input.TextArea 
           rows={4} 
           placeholder="Enter residential address" 
-          value={formData.directorAddress}
-          onChange={(e) => handleFieldChange('address', e.target.value)}
+          value={formData.directorAddress || ''}
+          onChange={(e) => {
+            const value = e.target.value
+            updateFormData('directorAddress', value)
+            form.setFieldsValue({ directorAddress: value })
+          }}
         />
       </Form.Item>
 
