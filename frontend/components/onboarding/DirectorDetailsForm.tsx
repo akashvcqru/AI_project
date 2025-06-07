@@ -25,6 +25,7 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
   const [form] = Form.useForm()
   const [isVerifying, setIsVerifying] = useState(false)
   const [isPanVerified, setIsPanVerified] = useState<boolean | null>(formData.panNumber && formData.isPanVerified ? true : null)
+  const [panDocument, setPanDocument] = useState<any>(formData.panDocument || null)
 
   // Pre-fill form with existing data
   useEffect(() => {
@@ -33,7 +34,8 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
       panNumber: formData.panNumber,
       aadharNumber: formData.aadharNumber,
       designation: formData.designation,
-      directorAddress: formData.directorAddress || ''
+      directorAddress: formData.directorAddress || '',
+      panDocument: formData.panDocument
     })
   }, [form, formData])
 
@@ -99,7 +101,8 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
         designation: values.designation,
         directorAddress: values.directorAddress,
         photo: values.photo,
-        signature: values.signature
+        signature: values.signature,
+        panDocument: values.panDocument
       }
 
       // Update each field individually
@@ -204,6 +207,36 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
     defaultFileList: formData.signature ? [formData.signature] : []
   }
 
+  const panDocumentUploadProps: UploadProps = {
+    name: 'file',
+    customRequest: customUpload,
+    beforeUpload: (file) => {
+      const isValidType = ['image/jpeg', 'image/png', 'application/pdf'].includes(file.type)
+      if (!isValidType) {
+        message.error('You can only upload JPG, PNG or PDF files!')
+        return false
+      }
+      const isLt2M = file.size / 1024 / 1024 < 2
+      if (!isLt2M) {
+        message.error('File must be smaller than 2MB!')
+        return false
+      }
+      return true
+    },
+    onChange(info) {
+      if (info.file.status === 'done') {
+        updateFormData('panDocument', info.file)
+        setPanDocument(info.file)
+      } else if (info.file.status === 'removed') {
+        updateFormData('panDocument', null)
+        setPanDocument(null)
+      }
+    },
+    maxCount: 1,
+    listType: 'text',
+    defaultFileList: formData.panDocument ? [formData.panDocument] : []
+  }
+
   return (
     <Form form={form} onFinish={handleSubmit} layout="vertical">
       <Form.Item
@@ -251,7 +284,7 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
         help={isPanVerified === true ? (
           <span className="text-green-600">PAN verified successfully</span>
         ) : isPanVerified === false ? (
-          <span className="text-red-600">PAN verification failed</span>
+          <span className="text-red-600">PAN verification failed. Please upload your PAN card.</span>
         ) : undefined}
         validateStatus={isPanVerified === true ? "success" : isPanVerified === false ? "error" : undefined}
       >
@@ -277,6 +310,19 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
           suffix={isVerifying ? <Spin size="small" /> : null}
         />
       </Form.Item>
+
+      {isPanVerified === false && (
+        <Form.Item
+          name="panDocument"
+          label="PAN Card"
+          rules={[{ required: true, message: 'Please upload your PAN card!' }]}
+          extra="Required when PAN verification fails. Supported formats: JPG, PNG, PDF (Max size: 2MB)"
+        >
+          <Upload {...panDocumentUploadProps}>
+            <Button icon={<UploadOutlined />}>Upload PAN Card</Button>
+          </Upload>
+        </Form.Item>
+      )}
 
       <Form.Item
         name="aadharNumber"

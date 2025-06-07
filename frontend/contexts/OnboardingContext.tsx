@@ -24,6 +24,7 @@ export interface FormData {
   name: string
   panNumber: string
   isPanVerified: boolean
+  panDocument: any
   aadharNumber: string
   designation: string
   directorAddress: string
@@ -68,6 +69,7 @@ const initialFormData: FormData = {
   name: '',
   panNumber: '',
   isPanVerified: false,
+  panDocument: null,
   aadharNumber: '',
   designation: '',
   directorAddress: '',

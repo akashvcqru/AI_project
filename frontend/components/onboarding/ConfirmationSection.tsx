@@ -166,6 +166,15 @@ const ConfirmationSection = ({ onNext, onPrev }: ConfirmationProps) => {
           <Descriptions column={2} bordered size="small">
             <Descriptions.Item label="Full Name">{formData.name}</Descriptions.Item>
             <Descriptions.Item label="Designation">{formData.designation}</Descriptions.Item>
+            <Descriptions.Item label="PAN Number">{formData.panNumber}</Descriptions.Item>
+            <Descriptions.Item label="PAN Status">
+              <span className={formData.isPanVerified ? 'text-green-500' : 'text-red-500'}>
+                {formData.isPanVerified ? '✓ Verified' : '✗ Not Verified'}
+              </span>
+            </Descriptions.Item>
+            {!formData.isPanVerified && (
+              <Descriptions.Item label="PAN Card">{formatFileInfo(formData.panDocument)}</Descriptions.Item>
+            )}
             <Descriptions.Item label="Aadhar Number">{formData.aadharNumber}</Descriptions.Item>
             <Descriptions.Item label="Photo">{formatFileInfo(formData.photo)}</Descriptions.Item>
             <Descriptions.Item label="Signature">{formatFileInfo(formData.signature)}</Descriptions.Item>
