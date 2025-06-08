@@ -1,24 +1,23 @@
 'use client'
 
 import { useState } from 'react'
-import { Layout, Menu, theme, Avatar, Dropdown, Modal, Form, Input, message, MenuProps } from 'antd'
-import { 
-  DashboardOutlined, 
-  TeamOutlined, 
-  UserOutlined, 
-  LogoutOutlined,
-  LockOutlined,
+import { Layout, Menu, Button, Avatar, Dropdown, theme, message } from 'antd'
+import {
+  DashboardOutlined,
+  TeamOutlined,
+  UserOutlined,
   SettingOutlined,
-  DownOutlined
+  LogoutOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  LockOutlined,
 } from '@ant-design/icons'
 import { useRouter, usePathname } from 'next/navigation'
-import { useAuth } from '../../contexts/AuthContext'
-import ProtectedRoute from '../../components/auth/ProtectedRoute'
+import ProtectedRoute from '@/components/auth/ProtectedRoute'
+import { useAuth } from '@/app/store/hooks/useAuth'
 import AdminBreadcrumb from './components/Breadcrumb'
 
 const { Header, Sider, Content } = Layout
-
-type MenuItem = Required<MenuProps>['items'][number]
 
 export default function AdminLayout({
   children,
@@ -28,23 +27,14 @@ export default function AdminLayout({
   const [collapsed, setCollapsed] = useState(false)
   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false)
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false)
-  const [form] = Form.useForm()
-  const [passwordForm] = Form.useForm()
   const router = useRouter()
   const pathname = usePathname()
-  const { adminUser, logout, isAuthenticated } = useAuth()
-  const {
-    token: { colorBgContainer, borderRadiusLG },
-  } = theme.useToken()
+  const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken()
+  const { logout: handleLogout } = useAuth()
 
   // If we're on the login page, render children directly
   if (pathname === '/admin/login') {
     return <>{children}</>
-  }
-
-  const handleLogout = () => {
-    localStorage.removeItem('adminToken')
-    router.push('/admin/login')
   }
 
   const menuItems = [
@@ -59,18 +49,18 @@ export default function AdminLayout({
       icon: <TeamOutlined />,
       label: 'Company List',
       onClick: () => router.push('/admin/companies')
-    },
-    {
-      key: 'logout',
-      icon: <LogoutOutlined />,
-      label: 'Logout',
-      onClick: handleLogout
     }
   ]
 
+  const logoutItem = {
+    key: 'logout',
+    icon: <LogoutOutlined />,
+    label: 'Logout',
+    onClick: handleLogout
+  }
+
   // Get the current selected key based on pathname
   const getSelectedKey = () => {
-    // Check if we're on the dashboard (either /admin or /admin/dashboard)
     if (pathname === '/admin' || pathname === '/admin/' || pathname === '/admin/dashboard') {
       return ['dashboard']
     }
@@ -85,7 +75,6 @@ export default function AdminLayout({
       // Here you would typically make an API call to update the profile
       message.success('Profile updated successfully!')
       setIsProfileModalVisible(false)
-      form.resetFields()
     } catch (error) {
       message.error('Failed to update profile')
     }
@@ -115,7 +104,6 @@ export default function AdminLayout({
       if (response.ok) {
         message.success('Password changed successfully!')
         setIsPasswordModalVisible(false)
-        passwordForm.resetFields()
       } else {
         message.error(data.message || 'Failed to change password')
       }
@@ -141,7 +129,9 @@ export default function AdminLayout({
             top: 0,
             bottom: 0,
             boxShadow: '2px 0 8px 0 rgba(29,35,41,.05)',
-            zIndex: 50
+            zIndex: 50,
+            display: 'flex',
+            flexDirection: 'column'
           }}
           className="border-r border-gray-100"
         >
@@ -150,13 +140,34 @@ export default function AdminLayout({
               {collapsed ? 'SA' : 'Super Admin'}
             </h2>
           </div>
-          <Menu
-            theme="light"
-            selectedKeys={getSelectedKey()}
-            mode="inline"
-            items={menuItems}
-            className="border-0"
-          />
+
+          <div className="flex-1 overflow-auto">
+            <Menu
+              theme="light"
+              selectedKeys={getSelectedKey()}
+              mode="inline"
+              items={menuItems}
+              className="border-0"
+            />
+          </div>
+
+          <div className="border-t border-gray-100">
+            <Menu
+              theme="light"
+              mode="inline"
+              items={[logoutItem]}
+              className="border-0"
+            />
+          </div>
+
+          <div className="p-4 border-t border-gray-100">
+            <Button
+              type="text"
+              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              onClick={() => setCollapsed(!collapsed)}
+              className="w-full flex items-center justify-center"
+            />
+          </div>
         </Sider>
 
         <Layout style={{ marginLeft: collapsed ? 80 : 200, transition: 'all 0.2s' }}>

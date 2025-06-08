@@ -1,18 +1,14 @@
-import type { Metadata } from 'next'
-import { Roboto } from 'next/font/google'
 import { Providers } from './providers'
-import 'antd/dist/reset.css'
+import { ConfigProvider } from 'antd'
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
 import './globals.css'
 
-const roboto = Roboto({
-  weight: ['300', '400', '500', '700'],
-  subsets: ['latin'],
-  display: 'swap',
-})
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'User Onboarding System',
-  description: 'A comprehensive user onboarding system',
+  title: 'Admin Dashboard',
+  description: 'Admin dashboard for company management',
 }
 
 export default function RootLayout({
@@ -22,8 +18,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={roboto.className}>
-        <Providers>{children}</Providers>
+      <body className={inter.className}>
+        <Providers>
+          <ConfigProvider
+            theme={{
+              token: {
+                colorPrimary: '#1890ff',
+              },
+            }}
+          >
+            {children}
+          </ConfigProvider>
+        </Providers>
       </body>
     </html>
   )

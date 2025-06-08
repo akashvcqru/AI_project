@@ -2,7 +2,8 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '../../contexts/AuthContext'
+import { useSelector } from 'react-redux'
+import type { RootState } from '@/app/store/store'
 import { Spin } from 'antd'
 
 interface ProtectedRouteProps {
@@ -10,33 +11,33 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth()
   const router = useRouter()
+  const { isAuthenticated, token } = useSelector((state: RootState) => state.auth)
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
+    if (!isAuthenticated || !token) {
       router.push('/admin/login')
     }
-  }, [isAuthenticated, loading, router])
+  }, [isAuthenticated, token, router])
 
-  if (loading) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh' 
-      }}>
-        <Spin size="large" />
-      </div>
-    )
+  if (isAuthenticated && token) {
+    return <>{children}</>
   }
 
-  if (!isAuthenticated) {
-    return null // Will redirect via useEffect
+  if (!isAuthenticated || !token) {
+    return null
   }
 
-  return <>{children}</>
+  return (
+    <div style={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      height: '100vh' 
+    }}>
+      <Spin size="large" />
+    </div>
+  )
 }
 
 export default ProtectedRoute 

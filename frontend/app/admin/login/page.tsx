@@ -4,7 +4,9 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Form, Input, Button, Card, message, Typography, Space } from 'antd'
 import { UserOutlined, LockOutlined, LoginOutlined } from '@ant-design/icons'
-import { useAuth } from '../../../contexts/AuthContext'
+import { useAuth } from '@/app/store/hooks/useAuth'
+import { useSelector } from 'react-redux'
+import type { RootState } from '@/app/store/store'
 
 const { Title, Text } = Typography
 

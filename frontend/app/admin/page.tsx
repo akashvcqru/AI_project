@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { Card, Statistic, Row, Col } from 'antd'
-import { useAuth } from '../../contexts/AuthContext'
+import { useSelector } from 'react-redux'
+import type { RootState } from '@/app/store/store'
 
 interface Stats {
   totalEntries: number
@@ -18,7 +19,7 @@ const SuperAdminPage = () => {
     approvedEntries: 0, 
     rejectedEntries: 0 
   })
-  const { adminUser } = useAuth()
+  const { user } = useSelector((state: RootState) => state.auth)
 
   useEffect(() => {
     fetchStats()
@@ -38,7 +39,7 @@ const SuperAdminPage = () => {
 
   return (
     <div>
-      <h2 style={{ marginBottom: '24px' }}>Welcome back, {adminUser?.name}!</h2>
+      <h2 style={{ marginBottom: '24px' }}>Welcome back, {user?.name}!</h2>
       
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}>
