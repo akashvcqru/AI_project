@@ -40,7 +40,39 @@ namespace UserOnboarding.API.Controllers
                 return Unauthorized(new { message = "Invalid credentials" });
             }
 
-            return Ok(new { message = "Login successful" });
+            var token = GenerateJwtToken(admin);
+            return Ok(new { token, message = "Login successful" });
+        }
+
+        [Authorize]
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            var adminEmail = User.Identity?.Name;
+            if (string.IsNullOrEmpty(adminEmail))
+            {
+                return Unauthorized(new { message = "User not authenticated" });
+            }
+
+            var admin = await _context.Admins
+                .FirstOrDefaultAsync(a => a.Email == adminEmail);
+
+            if (admin == null)
+            {
+                return NotFound(new { message = "Admin not found" });
+            }
+
+            // Verify current password
+            if (!VerifyPassword(request.CurrentPassword, admin.PasswordHash))
+            {
+                return BadRequest(new { message = "Current password is incorrect" });
+            }
+
+            // Update password
+            admin.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Password changed successfully" });
         }
 
         [Authorize]
@@ -242,6 +274,28 @@ namespace UserOnboarding.API.Controllers
             }
         }
 
+        private string GenerateJwtToken(Admin admin)
+        {
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not found")));
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.Name, admin.Email),
+                new Claim(ClaimTypes.Role, "Admin")
+            };
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddDays(1),
+                signingCredentials: credentials
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
         private bool VerifyPassword(string password, string hash)
         {
             return BCrypt.Net.BCrypt.Verify(password, hash);
@@ -252,6 +306,12 @@ namespace UserOnboarding.API.Controllers
     {
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+    }
+
+    public class ChangePasswordRequest
+    {
+        public string CurrentPassword { get; set; } = string.Empty;
+        public string NewPassword { get; set; } = string.Empty;
     }
 
     public class ReviewRequest

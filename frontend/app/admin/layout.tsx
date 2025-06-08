@@ -1,20 +1,24 @@
 'use client'
 
 import { useState } from 'react'
-import { Layout, Menu, theme, Avatar, Dropdown, Modal, Form, Input, message } from 'antd'
+import { Layout, Menu, theme, Avatar, Dropdown, Modal, Form, Input, message, MenuProps } from 'antd'
 import { 
   DashboardOutlined, 
   TeamOutlined, 
   UserOutlined, 
   LogoutOutlined,
   LockOutlined,
-  SettingOutlined
+  SettingOutlined,
+  DownOutlined
 } from '@ant-design/icons'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '../../contexts/AuthContext'
 import ProtectedRoute from '../../components/auth/ProtectedRoute'
+import AdminBreadcrumb from './components/Breadcrumb'
 
 const { Header, Sider, Content } = Layout
+
+type MenuItem = Required<MenuProps>['items'][number]
 
 export default function AdminLayout({
   children,
@@ -38,18 +42,43 @@ export default function AdminLayout({
     return <>{children}</>
   }
 
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken')
+    router.push('/admin/login')
+  }
+
   const menuItems = [
     {
-      key: '/admin',
+      key: 'dashboard',
       icon: <DashboardOutlined />,
       label: 'Dashboard',
+      onClick: () => router.push('/admin/')
     },
     {
-      key: '/admin/companies',
+      key: 'companies',
       icon: <TeamOutlined />,
       label: 'Company List',
+      onClick: () => router.push('/admin/companies')
     },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: 'Logout',
+      onClick: handleLogout
+    }
   ]
+
+  // Get the current selected key based on pathname
+  const getSelectedKey = () => {
+    // Check if we're on the dashboard (either /admin or /admin/dashboard)
+    if (pathname === '/admin' || pathname === '/admin/' || pathname === '/admin/dashboard') {
+      return ['dashboard']
+    }
+    if (pathname === '/admin/companies') {
+      return ['companies']
+    }
+    return [] // Return empty array if no match
+  }
 
   const handleProfileUpdate = async (values: any) => {
     try {
@@ -68,41 +97,33 @@ export default function AdminLayout({
         message.error('New passwords do not match!')
         return
       }
-      // Here you would typically make an API call to change the password
-      message.success('Password changed successfully!')
-      setIsPasswordModalVisible(false)
-      passwordForm.resetFields()
+
+      const response = await fetch('/api/admin/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        },
+        body: JSON.stringify({
+          currentPassword: values.currentPassword,
+          newPassword: values.newPassword
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        message.success('Password changed successfully!')
+        setIsPasswordModalVisible(false)
+        passwordForm.resetFields()
+      } else {
+        message.error(data.message || 'Failed to change password')
+      }
     } catch (error) {
-      message.error('Failed to change password')
+      console.error('Error changing password:', error)
+      message.error('Failed to change password. Please try again.')
     }
   }
-
-  const userMenuItems = [
-    {
-      key: 'profile',
-      icon: <UserOutlined />,
-      label: 'Profile',
-      onClick: () => setIsProfileModalVisible(true),
-    },
-    {
-      key: 'password',
-      icon: <LockOutlined />,
-      label: 'Change Password',
-      onClick: () => setIsPasswordModalVisible(true),
-    },
-    {
-      type: 'divider',
-    },
-    {
-      key: 'logout',
-      icon: <LogoutOutlined />,
-      label: 'Logout',
-      onClick: () => {
-        logout()
-        router.push('/admin/login')
-      },
-    },
-  ]
 
   return (
     <ProtectedRoute>
@@ -112,64 +133,78 @@ export default function AdminLayout({
           collapsed={collapsed} 
           onCollapse={(value) => setCollapsed(value)}
           theme="light"
-          style={{
+          style={{ 
+            overflow: 'auto',
+            height: '100vh',
+            position: 'fixed',
+            left: 0,
+            top: 0,
+            bottom: 0,
             boxShadow: '2px 0 8px 0 rgba(29,35,41,.05)',
-            zIndex: 10,
+            zIndex: 50
           }}
+          className="border-r border-gray-100"
         >
-          <div style={{ 
-            height: '64px', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            borderBottom: '1px solid #f0f0f0'
-          }}>
-            <h2 style={{ 
-              margin: 0, 
-              color: '#1890ff',
-              fontSize: collapsed ? '16px' : '20px',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden'
-            }}>
+          <div className="h-16 flex items-center justify-center border-b border-gray-100">
+            <h2 className={`text-blue-600 text-xl font-bold transition-opacity duration-200 ${collapsed ? 'opacity-0' : 'opacity-100'}`}>
               {collapsed ? 'SA' : 'Super Admin'}
             </h2>
           </div>
           <Menu
             theme="light"
+            selectedKeys={getSelectedKey()}
             mode="inline"
-            selectedKeys={[pathname]}
             items={menuItems}
-            onClick={({ key }) => router.push(key)}
-            style={{ borderRight: 0 }}
+            className="border-0"
           />
         </Sider>
-        <Layout>
+
+        <Layout style={{ marginLeft: collapsed ? 80 : 200, transition: 'all 0.2s' }}>
           <Header style={{ 
             padding: '0 24px', 
             background: colorBgContainer,
+            position: 'fixed',
+            top: 0,
+            right: 0,
+            width: `calc(100% - ${collapsed ? 80 : 200}px)`,
+            zIndex: 40,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-end',
-            boxShadow: '0 1px 4px rgba(0,21,41,.08)',
-            zIndex: 9,
+            boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03)',
+            transition: 'all 0.2s'
           }}>
-            <Dropdown 
-              menu={{ items: userMenuItems }} 
-              placement="bottomRight" 
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: 'profile',
+                    icon: <UserOutlined />,
+                    label: 'Profile',
+                    onClick: () => router.push('/admin/profile')
+                  },
+                  {
+                    key: 'change-password',
+                    icon: <LockOutlined />,
+                    label: 'Change Password',
+                    onClick: () => router.push('/admin/change-password')
+                  },
+                  {
+                    type: 'divider'
+                  },
+                  {
+                    key: 'logout',
+                    icon: <LogoutOutlined />,
+                    label: 'Logout',
+                    onClick: handleLogout
+                  }
+                ]
+              }}
+              placement="bottomRight"
               arrow
               trigger={['click']}
             >
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                cursor: 'pointer',
-                padding: '0 12px',
-                borderRadius: '4px',
-                transition: 'background-color 0.3s',
-                ':hover': {
-                  backgroundColor: 'rgba(0,0,0,0.025)'
-                }
-              }}>
+              <div className="flex items-center cursor-pointer px-3 py-2 rounded hover:bg-gray-50 transition-colors duration-200">
                 <Avatar 
                   style={{ 
                     backgroundColor: '#1890ff',
@@ -178,122 +213,29 @@ export default function AdminLayout({
                   }} 
                   icon={<UserOutlined />} 
                 />
-                <span style={{ 
-                  color: '#1f2937',
-                  marginRight: '4px'
-                }}>
-                  {adminUser?.name}
-                </span>
-                <SettingOutlined style={{ color: '#666' }} />
+                <span className="text-gray-800 mr-1">Admin</span>
+                <SettingOutlined className="text-gray-500" />
               </div>
             </Dropdown>
           </Header>
+
           <Content style={{ 
-            margin: '24px',
+            margin: '88px 24px 24px',
             padding: 24,
             background: colorBgContainer,
             borderRadius: borderRadiusLG,
             minHeight: 280,
-            overflow: 'auto'
+            overflow: 'auto',
+            position: 'relative',
+            paddingBottom: '80px'
           }}>
+            {pathname !== '/admin/dashboard' && <AdminBreadcrumb />}
             {children}
+            <div className="absolute bottom-0 left-0 right-0 py-4 px-6 bg-white border-t border-gray-100 text-center text-gray-600 text-sm">
+              <div>© Copyright {new Date().getFullYear()} VCQRU Private Limited | All Rights Reserved.</div>
+            </div>
           </Content>
         </Layout>
-
-        {/* Profile Modal */}
-        <Modal
-          title="Update Profile"
-          open={isProfileModalVisible}
-          onOk={() => form.submit()}
-          onCancel={() => {
-            setIsProfileModalVisible(false)
-            form.resetFields()
-          }}
-          okText="Update"
-          cancelText="Cancel"
-        >
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleProfileUpdate}
-            initialValues={{
-              name: adminUser?.name,
-              email: adminUser?.email,
-            }}
-          >
-            <Form.Item
-              name="name"
-              label="Name"
-              rules={[{ required: true, message: 'Please input your name!' }]}
-            >
-              <Input prefix={<UserOutlined />} placeholder="Name" />
-            </Form.Item>
-            <Form.Item
-              name="email"
-              label="Email"
-              rules={[
-                { required: true, message: 'Please input your email!' },
-                { type: 'email', message: 'Please enter a valid email!' }
-              ]}
-            >
-              <Input prefix={<UserOutlined />} placeholder="Email" disabled />
-            </Form.Item>
-          </Form>
-        </Modal>
-
-        {/* Change Password Modal */}
-        <Modal
-          title="Change Password"
-          open={isPasswordModalVisible}
-          onOk={() => passwordForm.submit()}
-          onCancel={() => {
-            setIsPasswordModalVisible(false)
-            passwordForm.resetFields()
-          }}
-          okText="Change"
-          cancelText="Cancel"
-        >
-          <Form
-            form={passwordForm}
-            layout="vertical"
-            onFinish={handlePasswordChange}
-          >
-            <Form.Item
-              name="currentPassword"
-              label="Current Password"
-              rules={[{ required: true, message: 'Please input your current password!' }]}
-            >
-              <Input.Password prefix={<LockOutlined />} placeholder="Current Password" />
-            </Form.Item>
-            <Form.Item
-              name="newPassword"
-              label="New Password"
-              rules={[
-                { required: true, message: 'Please input your new password!' },
-                { min: 6, message: 'Password must be at least 6 characters!' }
-              ]}
-            >
-              <Input.Password prefix={<LockOutlined />} placeholder="New Password" />
-            </Form.Item>
-            <Form.Item
-              name="confirmPassword"
-              label="Confirm New Password"
-              rules={[
-                { required: true, message: 'Please confirm your new password!' },
-                ({ getFieldValue }) => ({
-                  validator(_, value) {
-                    if (!value || getFieldValue('newPassword') === value) {
-                      return Promise.resolve()
-                    }
-                    return Promise.reject(new Error('The two passwords do not match!'))
-                  },
-                }),
-              ]}
-            >
-              <Input.Password prefix={<LockOutlined />} placeholder="Confirm New Password" />
-            </Form.Item>
-          </Form>
-        </Modal>
       </Layout>
     </ProtectedRoute>
   )
