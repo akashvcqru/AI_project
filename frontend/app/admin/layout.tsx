@@ -204,7 +204,7 @@ export default function AdminLayout({
               arrow
               trigger={['click']}
             >
-              <div className="flex items-center cursor-pointer px-3 py-2 rounded hover:bg-gray-50 transition-colors duration-200">
+              <div className="flex items-center cursor-pointer px-3 py-2">
                 <Avatar 
                   style={{ 
                     backgroundColor: '#1890ff',
