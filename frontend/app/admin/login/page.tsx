@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { Form, Input, Button, Card, message, Typography, Space } from 'antd'
 import { UserOutlined, LockOutlined, LoginOutlined } from '@ant-design/icons'
+import { useRouter } from 'next/navigation'
+import { useLoginMutation } from '@/app/store/services/adminApi'
 import { useAuth } from '@/app/store/hooks/useAuth'
 import { useSelector } from 'react-redux'
 import type { RootState } from '@/app/store/store'
@@ -13,8 +14,9 @@ const { Title, Text } = Typography
 const AdminLoginPage = () => {
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
-  const { login, isAuthenticated } = useAuth()
+  const { login: authLogin, isAuthenticated } = useAuth()
   const router = useRouter()
+  const [login] = useLoginMutation()
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -26,16 +28,33 @@ const AdminLoginPage = () => {
   const handleLogin = async (values: { email: string; password: string }) => {
     setLoading(true)
     try {
-      const success = await login(values.email, values.password)
+      const credentials = {
+        email: values.email.trim().toLowerCase(),
+        password: values.password
+      }
+      console.log('Attempting login with:', credentials)
       
-      if (success) {
+      const result = await login(credentials).unwrap()
+      console.log('Login response:', result)
+      
+      if (result && result.user && result.token) {
+        console.log('Login successful, setting auth state')
+        authLogin(result.user, result.token)
         message.success('Login successful!')
         router.push('/admin')
       } else {
-        message.error('Invalid email or password')
+        console.error('Invalid response format:', result)
+        throw new Error('Invalid response from server')
       }
-    } catch (error) {
-      message.error('Login failed. Please try again.')
+    } catch (error: any) {
+      console.error('Login error details:', error)
+      
+      // Handle the error message from the transformed error response
+      if (error.message) {
+        message.error(error.message)
+      } else {
+        message.error('Login failed. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -88,6 +107,10 @@ const AdminLoginPage = () => {
           onFinish={handleLogin}
           autoComplete="off"
           size="large"
+          initialValues={{
+            email: 'admin@admin.com',
+            password: 'admin123'
+          }}
         >
           <Form.Item
             name="email"

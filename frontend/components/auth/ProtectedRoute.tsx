@@ -1,43 +1,41 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useSelector } from 'react-redux'
-import type { RootState } from '@/app/store/store'
+import { useEffect, useState } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
+import { useAuth } from '@/app/store/hooks/useAuth'
 import { Spin } from 'antd'
 
-interface ProtectedRouteProps {
+export default function ProtectedRoute({
+  children,
+}: {
   children: React.ReactNode
-}
-
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+}) {
+  const [mounted, setMounted] = useState(false)
   const router = useRouter()
-  const { isAuthenticated, token } = useSelector((state: RootState) => state.auth)
+  const pathname = usePathname()
+  const { isAuthenticated, isLoading } = useAuth()
 
   useEffect(() => {
-    if (!isAuthenticated || !token) {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (mounted && !isLoading && !isAuthenticated && pathname !== '/admin/login') {
       router.push('/admin/login')
     }
-  }, [isAuthenticated, token, router])
+  }, [mounted, isAuthenticated, isLoading, pathname, router])
 
-  if (isAuthenticated && token) {
-    return <>{children}</>
+  if (!mounted || isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Spin size="large" />
+      </div>
+    )
   }
 
-  if (!isAuthenticated || !token) {
+  if (!isAuthenticated && pathname !== '/admin/login') {
     return null
   }
 
-  return (
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      height: '100vh' 
-    }}>
-      <Spin size="large" />
-    </div>
-  )
-}
-
-export default ProtectedRoute 
+  return <>{children}</>
+} 

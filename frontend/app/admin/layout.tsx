@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Layout, Menu, Button, Avatar, Dropdown, theme, message } from 'antd'
 import {
   DashboardOutlined,
@@ -25,50 +25,45 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   const [collapsed, setCollapsed] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false)
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
-  const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken()
-  const { logout: handleLogout } = useAuth()
+  const { logout } = useAuth()
+  const {
+    token: { colorBgContainer, borderRadiusLG },
+  } = theme.useToken()
 
-  // If we're on the login page, render children directly
-  if (pathname === '/admin/login') {
-    return <>{children}</>
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const handleLogout = () => {
+    logout()
+    router.push('/admin/login')
   }
 
   const menuItems = [
     {
-      key: 'dashboard',
+      key: '/admin',
       icon: <DashboardOutlined />,
       label: 'Dashboard',
-      onClick: () => router.push('/admin/')
+      onClick: () => router.push('/admin'),
     },
     {
-      key: 'companies',
+      key: '/admin/companies',
       icon: <TeamOutlined />,
-      label: 'Company List',
-      onClick: () => router.push('/admin/companies')
-    }
+      label: 'Companies',
+      onClick: () => router.push('/admin/companies'),
+    },
+    {
+      key: '/admin/profile',
+      icon: <UserOutlined />,
+      label: 'Profile',
+      onClick: () => router.push('/admin/profile'),
+    },
   ]
-
-  const logoutItem = {
-    key: 'logout',
-    icon: <LogoutOutlined />,
-    label: 'Logout',
-    onClick: handleLogout
-  }
-
-  // Get the current selected key based on pathname
-  const getSelectedKey = () => {
-    if (pathname === '/admin' || pathname === '/admin/' || pathname === '/admin/dashboard') {
-      return ['dashboard']
-    }
-    if (pathname === '/admin/companies') {
-      return ['companies']
-    }
-    return [] // Return empty array if no match
-  }
 
   const handleProfileUpdate = async (values: any) => {
     try {
@@ -113,6 +108,15 @@ export default function AdminLayout({
     }
   }
 
+  if (!mounted) {
+    return null
+  }
+
+  // If we're on the login page, render children directly without layout
+  if (pathname === '/admin/login') {
+    return <>{children}</>
+  }
+
   return (
     <ProtectedRoute>
       <Layout style={{ minHeight: '100vh' }}>
@@ -144,7 +148,7 @@ export default function AdminLayout({
           <div className="flex-1 overflow-auto">
             <Menu
               theme="light"
-              selectedKeys={getSelectedKey()}
+              selectedKeys={[pathname]}
               mode="inline"
               items={menuItems}
               className="border-0"
@@ -155,7 +159,14 @@ export default function AdminLayout({
             <Menu
               theme="light"
               mode="inline"
-              items={[logoutItem]}
+              items={[
+                {
+                  key: 'logout',
+                  icon: <LogoutOutlined />,
+                  label: 'Logout',
+                  onClick: handleLogout
+                }
+              ]}
               className="border-0"
             />
           </div>
