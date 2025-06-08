@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Roboto } from 'next/font/google'
 import { Providers } from './providers'
+import 'antd/dist/reset.css'
 import './globals.css'
 
 const roboto = Roboto({
