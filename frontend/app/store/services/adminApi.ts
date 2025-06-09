@@ -1,14 +1,15 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import type { RootState } from '../store'
+import { RootState } from '../store'
+
+interface LoginRequest {
+  email: string
+  password: string
+}
 
 interface LoginResponse {
-  token: string
-  user: {
-    id: string
-    name: string
-    email: string
-    role: string
-  }
+  email: string
+  isSuperAdmin: boolean
+  message?: string
 }
 
 interface StatsResponse {
@@ -46,59 +47,29 @@ export const adminApi = createApi({
   }),
   tagTypes: ['Company', 'Stats'],
   endpoints: (builder) => ({
-    // Auth endpoints
-    login: builder.mutation<LoginResponse, { email: string; password: string }>({
-      query: (credentials) => {
-        // Ensure email is lowercase and trimmed
-        const email = credentials.email.toLowerCase().trim()
-        const password = credentials.password.trim()
-        
-        const requestBody = {
-          email,
-          password
-        }
-        
-        console.log('Login request details:', {
-          url: '/Admin/login',
-          method: 'POST',
-          body: requestBody,
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': '*/*'
-          }
-        })
-        
+    login: builder.mutation<LoginResponse, LoginRequest>({
+      query: (credentials) => ({
+        url: '/Admin/login',
+        method: 'POST',
+        body: {
+          email: credentials.email.trim().toLowerCase(),
+          password: credentials.password
+        },
+      }),
+      transformResponse: (response: any) => {
+        console.log('Raw login response:', response)
         return {
-          url: '/Admin/login',
-          method: 'POST',
-          body: requestBody,
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': '*/*'
-          }
+          email: response.email,
+          isSuperAdmin: response.isSuperAdmin,
+          message: response.message
         }
       },
       transformErrorResponse: (response: any) => {
-        console.log('Raw error response:', response)
-        
-        // Handle 401 Unauthorized specifically
-        if (response.status === 401) {
-          return { message: 'Invalid email or password' }
+        console.error('Login error response:', response)
+        return {
+          message: response.data?.message || 'Login failed. Please try again.'
         }
-        
-        // Handle both error formats
-        if (response.data?.message) {
-          return { message: response.data.message }
-        }
-        if (response.error?.message) {
-          return { message: response.error.message }
-        }
-        return { message: 'An error occurred during login' }
-      },
-      transformResponse: (response) => {
-        console.log('Login success response:', response)
-        return response
-      },
+      }
     }),
     changePassword: builder.mutation<{ message: string }, { currentPassword: string; newPassword: string }>({
       query: (passwords) => ({
@@ -116,13 +87,11 @@ export const adminApi = createApi({
       invalidatesTags: ['Company'],
     }),
 
-    // Stats endpoint
     getStats: builder.query<StatsResponse, void>({
       query: () => '/Admin/stats',
       providesTags: ['Stats'],
     }),
 
-    // Company endpoints
     getCompanies: builder.query<CompanyEntry[], void>({
       query: () => '/Admin/companies',
       providesTags: ['Company'],

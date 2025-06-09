@@ -1,13 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Form, Input, Button, Card, message, Typography, Space } from 'antd'
+import { Form, Input, Button, Card, message, Typography } from 'antd'
 import { UserOutlined, LockOutlined, LoginOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
 import { useLoginMutation } from '@/app/store/services/adminApi'
 import { useAuth } from '@/app/store/hooks/useAuth'
-import { useSelector } from 'react-redux'
-import type { RootState } from '@/app/store/store'
 
 const { Title, Text } = Typography
 
@@ -28,33 +26,37 @@ const AdminLoginPage = () => {
   const handleLogin = async (values: { email: string; password: string }) => {
     setLoading(true)
     try {
-      const credentials = {
+      console.log('Attempting login with:', { email: values.email.trim().toLowerCase() })
+      
+      const result = await login({
         email: values.email.trim().toLowerCase(),
         password: values.password
-      }
-      console.log('Attempting login with:', credentials)
+      }).unwrap()
       
-      const result = await login(credentials).unwrap()
       console.log('Login response:', result)
       
-      if (result && result.user && result.token) {
-        console.log('Login successful, setting auth state')
-        authLogin(result.user, result.token)
+      if (result.email && result.isSuperAdmin) {
+        // Create user object for auth state
+        const user = {
+          email: result.email,
+          isSuperAdmin: result.isSuperAdmin
+        }
+        
+        // Generate token and update auth state
+        const token = `admin-token-${Date.now()}`
+        authLogin(user, token)
+        
         message.success('Login successful!')
         router.push('/admin')
       } else {
-        console.error('Invalid response format:', result)
-        throw new Error('Invalid response from server')
+        throw new Error('Invalid response format from server')
       }
     } catch (error: any) {
-      console.error('Login error details:', error)
+      console.error('Login error:', error)
       
-      // Handle the error message from the transformed error response
-      if (error.message) {
-        message.error(error.message)
-      } else {
-        message.error('Login failed. Please try again.')
-      }
+      // Handle error messages
+      const errorMessage = error.data?.message || error.message || 'Login failed. Please try again.'
+      message.error(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -94,7 +96,7 @@ const AdminLoginPage = () => {
             <UserOutlined />
           </div>
           <Title level={2} style={{ margin: 0, color: '#1f2937' }}>
-            Super Admin
+            Admin Login
           </Title>
           <Text type="secondary">
             Sign in to access the admin dashboard
@@ -108,8 +110,8 @@ const AdminLoginPage = () => {
           autoComplete="off"
           size="large"
           initialValues={{
-            email: 'admin@admin.com',
-            password: 'admin123'
+            email: 'superadmin@vcqru.com',
+            password: 'VCQRU@2024'
           }}
         >
           <Form.Item
@@ -161,7 +163,7 @@ const AdminLoginPage = () => {
           </Form.Item>
         </Form>
 
-        <div style={{ 
+        <div style={{
           textAlign: 'center', 
           marginTop: '24px',
           padding: '16px',
@@ -169,15 +171,15 @@ const AdminLoginPage = () => {
           borderRadius: '8px'
         }}>
           <Text type="secondary" style={{ fontSize: '12px' }}>
-            Demo Credentials:
+            Super Admin Credentials:
           </Text>
           <br />
           <Text code style={{ fontSize: '12px' }}>
-            Email: admin@admin.com
+            Email: superadmin@vcqru.com
           </Text>
           <br />
           <Text code style={{ fontSize: '12px' }}>
-            Password: admin123
+            Password: VCQRU@2024
           </Text>
         </div>
       </Card>

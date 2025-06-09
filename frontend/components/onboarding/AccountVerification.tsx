@@ -288,6 +288,49 @@ const AccountVerification = ({ onNext, onPrev, onAlreadySubmitted }: AccountVeri
       
       // Save progress before moving to next step
       await saveProgress()
+
+      // Send submission confirmation email
+      try {
+        console.log('Attempting to send email to:', values.email);
+        const emailResponse = await fetch(`${API_BASE_URL}/api/Account/send-submission-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            email: values.email,
+            template: 'submission_confirmation'
+          }),
+        });
+
+        const responseData = await emailResponse.json().catch(() => ({}));
+        console.log('Email API Response:', {
+          status: emailResponse.status,
+          ok: emailResponse.ok,
+          data: responseData
+        });
+
+        if (!emailResponse.ok) {
+          console.error('Failed to send confirmation email:', {
+            status: emailResponse.status,
+            statusText: emailResponse.statusText,
+            error: responseData.message || 'Unknown error'
+          });
+          message.error('Failed to send confirmation email. Please contact support.');
+        } else {
+          console.log('Email sent successfully to:', values.email);
+          message.success('A confirmation email has been sent to your registered email address');
+        }
+      } catch (emailError: any) {
+        console.error('Error sending confirmation email:', {
+          error: emailError.message,
+          stack: emailError.stack,
+          email: values.email
+        });
+        message.error('Failed to send confirmation email. Please contact support.');
+      }
       
       // Now proceed to next step
       onNext()

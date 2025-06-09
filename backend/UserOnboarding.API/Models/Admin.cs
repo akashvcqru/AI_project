@@ -12,5 +12,11 @@ namespace UserOnboarding.API.Models
 
         [Required]
         public string PasswordHash { get; set; } = string.Empty;
+
+        public bool IsSuperAdmin { get; set; } = true;  // Always true since we only have super admin
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }
 } 
