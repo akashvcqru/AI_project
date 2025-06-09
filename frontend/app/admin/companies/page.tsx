@@ -8,10 +8,19 @@ import type { ColumnsType } from 'antd/es/table'
 interface CompanyEntry {
   id: number
   email: string
+  mobileNumber: string
   companyName: string
+  tradeName: string
+  gstNumber: string
+  address: string
+  city: string
+  state: string
+  pincode: string
   directorName: string
   panNumber: string
-  gstNumber: string
+  aadharNumber: string
+  designation: string
+  directorAddress: string
   status: 'Pending' | 'Approved' | 'Rejected'
   createdAt: string
   updatedAt: string
@@ -118,69 +127,154 @@ const CompaniesPage = () => {
       dataIndex: 'id',
       key: 'id',
       width: 60,
-      sorter: (a, b) => a.id - b.id,
+      sorter: (a, b) => (a.id || 0) - (b.id || 0),
+      render: (id) => id || 'N/A'
     },
     {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
       width: 200,
-      sorter: (a, b) => a.email.localeCompare(b.email),
+      sorter: (a, b) => (a.email || '').localeCompare(b.email || ''),
+      render: (email) => email || 'N/A'
+    },
+    {
+      title: 'Mobile',
+      dataIndex: 'mobileNumber',
+      key: 'mobileNumber',
+      width: 120,
+      sorter: (a, b) => (a.mobileNumber || '').localeCompare(b.mobileNumber || ''),
+      render: (mobile) => mobile || 'N/A'
     },
     {
       title: 'Company Name',
       dataIndex: 'companyName',
       key: 'companyName',
       width: 180,
-      sorter: (a, b) => a.companyName.localeCompare(b.companyName),
+      sorter: (a, b) => (a.companyName || '').localeCompare(b.companyName || ''),
+      render: (name) => name || 'N/A'
     },
     {
-      title: 'Director Name',
-      dataIndex: 'directorName',
-      key: 'directorName',
-      width: 150,
-      sorter: (a, b) => a.directorName.localeCompare(b.directorName),
-    },
-    {
-      title: 'PAN Number',
-      dataIndex: 'panNumber',
-      key: 'panNumber',
-      width: 120,
-      sorter: (a, b) => a.panNumber.localeCompare(b.panNumber),
+      title: 'Trade Name',
+      dataIndex: 'tradeName',
+      key: 'tradeName',
+      width: 180,
+      sorter: (a, b) => (a.tradeName || '').localeCompare(b.tradeName || ''),
+      render: (name) => name || 'N/A'
     },
     {
       title: 'GST Number',
       dataIndex: 'gstNumber',
       key: 'gstNumber',
       width: 150,
-      sorter: (a, b) => a.gstNumber.localeCompare(b.gstNumber),
+      sorter: (a, b) => (a.gstNumber || '').localeCompare(b.gstNumber || ''),
+      render: (gst) => gst || 'N/A'
+    },
+    {
+      title: 'Address',
+      dataIndex: 'address',
+      key: 'address',
+      width: 200,
+      ellipsis: true,
+      sorter: (a, b) => (a.address || '').localeCompare(b.address || ''),
+      render: (address) => address || 'N/A'
+    },
+    {
+      title: 'City',
+      dataIndex: 'city',
+      key: 'city',
+      width: 120,
+      sorter: (a, b) => (a.city || '').localeCompare(b.city || ''),
+      render: (city) => city || 'N/A'
+    },
+    {
+      title: 'State',
+      dataIndex: 'state',
+      key: 'state',
+      width: 120,
+      sorter: (a, b) => (a.state || '').localeCompare(b.state || ''),
+      render: (state) => state || 'N/A'
+    },
+    {
+      title: 'Pincode',
+      dataIndex: 'pincode',
+      key: 'pincode',
+      width: 100,
+      sorter: (a, b) => (a.pincode || '').localeCompare(b.pincode || ''),
+      render: (pincode) => pincode || 'N/A'
+    },
+    {
+      title: 'Director Name',
+      dataIndex: 'directorName',
+      key: 'directorName',
+      width: 150,
+      sorter: (a, b) => (a.directorName || '').localeCompare(b.directorName || ''),
+      render: (name) => name || 'N/A'
+    },
+    {
+      title: 'PAN Number',
+      dataIndex: 'panNumber',
+      key: 'panNumber',
+      width: 120,
+      sorter: (a, b) => (a.panNumber || '').localeCompare(b.panNumber || ''),
+      render: (pan) => pan || 'N/A'
+    },
+    {
+      title: 'Aadhar Number',
+      dataIndex: 'aadharNumber',
+      key: 'aadharNumber',
+      width: 120,
+      sorter: (a, b) => (a.aadharNumber || '').localeCompare(b.aadharNumber || ''),
+      render: (aadhar) => aadhar || 'N/A'
+    },
+    {
+      title: 'Designation',
+      dataIndex: 'designation',
+      key: 'designation',
+      width: 120,
+      sorter: (a, b) => (a.designation || '').localeCompare(b.designation || ''),
+      render: (designation) => designation || 'N/A'
+    },
+    {
+      title: 'Director Address',
+      dataIndex: 'directorAddress',
+      key: 'directorAddress',
+      width: 200,
+      ellipsis: true,
+      sorter: (a, b) => (a.directorAddress || '').localeCompare(b.directorAddress || ''),
+      render: (address) => address || 'N/A'
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
       width: 100,
-      render: (status) => getStatusTag(status),
+      render: (status) => status ? getStatusTag(status) : 'N/A',
       filters: [
         { text: 'Pending', value: 'Pending' },
         { text: 'Approved', value: 'Approved' },
         { text: 'Rejected', value: 'Rejected' },
       ],
       onFilter: (value, record) => record.status === value,
-      sorter: (a, b) => a.status.localeCompare(b.status),
+      sorter: (a, b) => (a.status || '').localeCompare(b.status || ''),
     },
     {
       title: 'Submitted Date',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 150,
-      render: (date) => new Date(date).toLocaleDateString(),
-      sorter: (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      render: (date) => date ? new Date(date).toLocaleDateString() : 'N/A',
+      sorter: (a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateA - dateB;
+      },
     },
     {
       title: 'Actions',
       key: 'actions',
       width: 200,
+      fixed: 'right',
       render: (_, record) => (
         <Space>
           {record.status === 'Pending' && (
@@ -218,7 +312,7 @@ const CompaniesPage = () => {
         dataSource={entries}
         rowKey="id"
         loading={loading}
-        scroll={{ x: 1200 }}
+        scroll={{ x: 2000 }}
         pagination={{
           pageSize: 10,
           showSizeChanger: true,
