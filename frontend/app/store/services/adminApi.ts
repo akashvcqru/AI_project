@@ -93,7 +93,7 @@ export const adminApi = createApi({
     }),
 
     getCompanies: builder.query<CompanyEntry[], void>({
-      query: () => '/Admin/companies',
+      query: () => '/Admin/onboarding-entries?limit=5',
       providesTags: ['Company'],
     }),
     getCompanyById: builder.query<CompanyEntry, string>({

@@ -118,36 +118,42 @@ const CompaniesPage = () => {
       dataIndex: 'id',
       key: 'id',
       width: 60,
+      sorter: (a, b) => a.id - b.id,
     },
     {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
       width: 200,
+      sorter: (a, b) => a.email.localeCompare(b.email),
     },
     {
       title: 'Company Name',
       dataIndex: 'companyName',
       key: 'companyName',
       width: 180,
+      sorter: (a, b) => a.companyName.localeCompare(b.companyName),
     },
     {
       title: 'Director Name',
       dataIndex: 'directorName',
       key: 'directorName',
       width: 150,
+      sorter: (a, b) => a.directorName.localeCompare(b.directorName),
     },
     {
       title: 'PAN Number',
       dataIndex: 'panNumber',
       key: 'panNumber',
       width: 120,
+      sorter: (a, b) => a.panNumber.localeCompare(b.panNumber),
     },
     {
       title: 'GST Number',
       dataIndex: 'gstNumber',
       key: 'gstNumber',
       width: 150,
+      sorter: (a, b) => a.gstNumber.localeCompare(b.gstNumber),
     },
     {
       title: 'Status',
@@ -161,6 +167,7 @@ const CompaniesPage = () => {
         { text: 'Rejected', value: 'Rejected' },
       ],
       onFilter: (value, record) => record.status === value,
+      sorter: (a, b) => a.status.localeCompare(b.status),
     },
     {
       title: 'Submitted Date',
@@ -168,6 +175,7 @@ const CompaniesPage = () => {
       key: 'createdAt',
       width: 150,
       render: (date) => new Date(date).toLocaleDateString(),
+      sorter: (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     },
     {
       title: 'Actions',
