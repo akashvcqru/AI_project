@@ -15,7 +15,6 @@ import {
 import { useRouter, usePathname } from 'next/navigation'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import { useAuth } from '@/app/store/hooks/useAuth'
-import AdminBreadcrumb from './components/Breadcrumb'
 
 const { Header, Sider, Content } = Layout
 
@@ -170,15 +169,6 @@ export default function AdminLayout({
               className="border-0"
             />
           </div>
-
-          <div className="p-4 border-t border-gray-100">
-            <Button
-              type="text"
-              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-              onClick={() => setCollapsed(!collapsed)}
-              className="w-full flex items-center justify-center"
-            />
-          </div>
         </Sider>
 
         <Layout style={{ marginLeft: collapsed ? 80 : 200, transition: 'all 0.2s' }}>
@@ -251,7 +241,6 @@ export default function AdminLayout({
             position: 'relative',
             paddingBottom: '80px'
           }}>
-            {pathname !== '/admin/dashboard' && <AdminBreadcrumb />}
             {children}
             <div className="absolute bottom-0 left-0 right-0 py-4 px-6 bg-white border-t border-gray-100 text-center text-gray-600 text-sm">
               <div>© Copyright {new Date().getFullYear()} VCQRU Private Limited | All Rights Reserved.</div>
