@@ -131,7 +131,8 @@ const AccountVerification = ({ onNext, onPrev, onAlreadySubmitted }: AccountVeri
       }
       
       const response = await verifyEmail({ email: values.email }).unwrap()
-      if (response.success) {
+      // The backend returns { message: "OTP sent successfully" }
+      if (response.message === "OTP sent successfully") {
         setIsOtpSent(true)
         startCountdown()
         message.success('OTP sent successfully to your email')
@@ -168,7 +169,8 @@ const AccountVerification = ({ onNext, onPrev, onAlreadySubmitted }: AccountVeri
         otp: values.otp 
       }).unwrap()
       
-      if (response.success) {
+      // The backend returns { message, isSubmitted, currentStep, userData }
+      if (response.message === "Email verified successfully") {
         setIsEmailVerified(true)
         setIsNewVerification(true)
         setCountdown(0)
@@ -177,6 +179,41 @@ const AccountVerification = ({ onNext, onPrev, onAlreadySubmitted }: AccountVeri
         
         // Update form data
         updateFormData('isEmailVerified', true)
+        
+        // If user has already submitted, show submission success
+        if (response.isSubmitted) {
+          setIsAlreadySubmitted(true)
+          setSubmissionMessage(response.submissionMessage)
+          if (onAlreadySubmitted) {
+            onAlreadySubmitted()
+          } else {
+            window.dispatchEvent(new Event('showSubmissionSuccess'))
+          }
+          return
+        }
+        
+        // Update user data if available
+        if (response.userData) {
+          const updates: any = {}
+          if (response.userData.email) updates.email = response.userData.email
+          if (response.userData.isEmailVerified) updates.isEmailVerified = response.userData.isEmailVerified
+          if (response.userData.panNumber) updates.panNumber = response.userData.panNumber
+          if (response.userData.gstNumber) updates.gstNumber = response.userData.gstNumber
+          if (response.userData.companyName) updates.companyName = response.userData.companyName
+          if (response.userData.companyAddress) updates.address = response.userData.companyAddress
+          if (response.userData.companyCity) updates.city = response.userData.companyCity
+          if (response.userData.companyState) updates.state = response.userData.companyState
+          if (response.userData.aadharNumber) updates.aadharNumber = response.userData.aadharNumber
+          
+          updateMultipleFields(updates)
+        }
+        
+        // Navigate to the appropriate step if not already submitted
+        if (response.currentStep > 0) {
+          setTimeout(() => {
+            goToStep(response.currentStep)
+          }, 1000)
+        }
         
         // Save progress
         setTimeout(() => {

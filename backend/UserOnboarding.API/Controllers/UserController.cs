@@ -142,7 +142,6 @@ namespace UserOnboarding.API.Controllers
                 // Update user's existing data with the comprehensive submission data
                 if (user.EKYC != null)
                 {
-                    user.EKYC.PANNumber = request.PanNumber ?? user.EKYC.PANNumber;
                     user.EKYC.GSTNumber = request.GstNumber ?? user.EKYC.GSTNumber;
                 }
 
@@ -156,6 +155,7 @@ namespace UserOnboarding.API.Controllers
 
                 if (user.DirectorDetails != null)
                 {
+                    user.DirectorDetails.PANNumber = request.PanNumber ?? user.DirectorDetails.PANNumber;
                     user.DirectorDetails.AadharNumber = request.AadharNumber ?? user.DirectorDetails.AadharNumber;
                 }
 
@@ -225,7 +225,7 @@ namespace UserOnboarding.API.Controllers
                 {
                     currentStep = 1; // Move to eKYC
                     
-                    if (user.EKYC != null && !string.IsNullOrEmpty(user.EKYC.PANNumber))
+                    if (user.EKYC != null && !string.IsNullOrEmpty(user.DirectorDetails?.PANNumber))
                     {
                         currentStep = 2; // Move to Company Details
                         
@@ -249,7 +249,7 @@ namespace UserOnboarding.API.Controllers
                     {
                         email = user.Email,
                         isEmailVerified = user.IsEmailVerified,
-                        panNumber = user.EKYC?.PANNumber,
+                        panNumber = user.DirectorDetails?.PANNumber,
                         gstNumber = user.EKYC?.GSTNumber,
                         companyName = user.CompanyDetails?.Name,
                         companyAddress = user.CompanyDetails?.Address,

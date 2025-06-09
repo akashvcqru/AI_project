@@ -115,7 +115,7 @@ namespace UserOnboarding.API.Controllers
             // Determine current step based on completed data
             int currentStep = 1; // After email verification, default to eKYC step
             
-            if (user.EKYC != null && !string.IsNullOrEmpty(user.EKYC.PANNumber))
+            if (user.EKYC != null && !string.IsNullOrEmpty(user.DirectorDetails?.PANNumber))
             {
                 currentStep = 2; // Move to Company Details
                 
@@ -138,7 +138,7 @@ namespace UserOnboarding.API.Controllers
                 {
                     email = user.Email,
                     isEmailVerified = user.IsEmailVerified,
-                    panNumber = user.EKYC?.PANNumber,
+                    panNumber = user.DirectorDetails?.PANNumber,
                     gstNumber = user.EKYC?.GSTNumber,
                     companyName = user.CompanyDetails?.Name,
                     companyAddress = user.CompanyDetails?.Address,

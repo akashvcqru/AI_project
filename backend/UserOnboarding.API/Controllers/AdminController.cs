@@ -88,7 +88,7 @@ namespace UserOnboarding.API.Controllers
                 {
                     u.Id,
                     u.Email,
-                    EKYC = new { u.EKYC.PANNumber, u.EKYC.GSTNumber },
+                    EKYC = new { u.EKYC.GSTNumber },
                     Company = new
                     {
                         u.CompanyDetails.Name,

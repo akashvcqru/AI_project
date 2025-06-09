@@ -27,8 +27,21 @@ interface PanVerificationResponse {
 }
 
 interface VerificationResponse {
-  success: boolean
   message: string
+  isSubmitted?: boolean
+  submissionMessage?: string
+  currentStep?: number
+  userData?: {
+    email: string
+    isEmailVerified: boolean
+    panNumber?: string
+    gstNumber?: string
+    companyName?: string
+    companyAddress?: string
+    companyCity?: string
+    companyState?: string
+    aadharNumber?: string
+  }
 }
 
 interface EKYCRequest {
