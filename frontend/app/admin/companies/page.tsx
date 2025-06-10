@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Table, Card, Tag, Space, Button, message, Modal, Input } from 'antd'
+import { Table, Card, Tag, Space, Button, message, Modal, Input, Popconfirm } from 'antd'
 import { CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 
@@ -279,17 +279,25 @@ const CompaniesPage = () => {
         <Space>
           {record.status === 'Pending' && (
             <>
-              <Button 
-                type="primary" 
-                size="small" 
-                icon={<CheckCircleOutlined />}
-                onClick={() => handleApprove(record.id)}
+              <Popconfirm
+                title="Approve Company"
+                description="Are you sure you want to approve this company?"
+                onConfirm={() => handleApprove(record.id)}
+                okText="Yes"
+                cancelText="No"
+                okButtonProps={{ type: 'primary' }}
               >
-                Approve
-              </Button>
-              <Button 
-                danger 
-                size="small" 
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<CheckCircleOutlined />}
+                >
+                  Approve
+                </Button>
+              </Popconfirm>
+              <Button
+                danger
+                size="small"
                 icon={<CloseCircleOutlined />}
                 onClick={() => openRejectModal(record.id)}
               >
@@ -298,7 +306,7 @@ const CompaniesPage = () => {
             </>
           )}
           {record.status !== 'Pending' && (
-            <span style={{ color: '#999' }}>No actions available</span>
+            <span className="text-gray-500">No actions available</span>
           )}
         </Space>
       ),
