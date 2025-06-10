@@ -9,6 +9,7 @@ using UserOnboarding.API.Data;
 using UserOnboarding.API.Models;
 using System.Security.Cryptography;
 using Microsoft.Extensions.Logging;
+using UserOnboarding.API.Services;
 
 namespace UserOnboarding.API.Controllers
 {
@@ -19,15 +20,18 @@ namespace UserOnboarding.API.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
         private readonly ILogger<AdminController> _logger;
+        private readonly IEmailService _emailService;
 
         public AdminController(
             ApplicationDbContext context, 
             IConfiguration configuration,
-            ILogger<AdminController> logger)
+            ILogger<AdminController> logger,
+            IEmailService emailService)
         {
             _context = context;
             _configuration = configuration;
             _logger = logger;
+            _emailService = emailService;
         }
 
         [HttpPost("login")]
@@ -338,6 +342,50 @@ namespace UserOnboarding.API.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Failed to fetch stats", error = ex.Message });
+            }
+        }
+
+        [HttpGet("send-approval-email/{id}")]
+        [HttpPost("send-approval-email/{id}")]
+        public async Task<IActionResult> SendApprovalEmail(int id)
+        {
+            try
+            {
+                // First try to find in OnboardingEntries
+                var entry = await _context.OnboardingEntries.FindAsync(id);
+                if (entry != null)
+                {
+                    await _emailService.SendApprovalEmailAsync(
+                        entry.Email,
+                        entry.CompanyName,
+                        entry.DirectorName
+                    );
+                    return Ok("Approval email sent successfully to onboarding entry");
+                }
+
+                // If not found in OnboardingEntries, try to find in Users
+                var user = await _context.Users
+                    .Include(u => u.CompanyDetails)
+                    .Include(u => u.DirectorDetails)
+                    .FirstOrDefaultAsync(u => u.Id == id);
+
+                if (user == null)
+                {
+                    return NotFound("Company entry not found in either OnboardingEntries or Users");
+                }
+
+                await _emailService.SendApprovalEmailAsync(
+                    user.Email,
+                    user.CompanyDetails?.Name ?? "Company",
+                    user.DirectorDetails?.Name ?? "Director"
+                );
+
+                return Ok("Approval email sent successfully to user");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending approval email for ID {Id}", id);
+                return StatusCode(500, "Error sending approval email");
             }
         }
 

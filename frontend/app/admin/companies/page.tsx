@@ -7,20 +7,32 @@ import type { ColumnsType } from 'antd/es/table'
 
 interface CompanyEntry {
   id: number
+  // Account Verification
   email: string
   mobileNumber: string
+  
+  // E-KYC
+  gstNumber: string
+  gstRegistrationCertificate: string // URL or base64 of the certificate
+  
+  // Company Details
   companyName: string
   tradeName: string
-  gstNumber: string
   address: string
   city: string
   state: string
   pincode: string
+  
+  // Director Details
   directorName: string
   panNumber: string
+  panCardImage: string // URL or base64 of the PAN card
   aadharNumber: string
   designation: string
   directorAddress: string
+  directorPhoto: string // URL or base64 of the photo
+  directorSignature: string // URL or base64 of the signature
+  
   status: 'Pending' | 'Approved' | 'Rejected'
   createdAt: string
   updatedAt: string
@@ -64,7 +76,19 @@ const CompaniesPage = () => {
       })
 
       if (response.ok) {
-        message.success('Company approved successfully!')
+        // Send approval email
+        const emailResponse = await fetch(`https://localhost:7001/api/Admin/send-approval-email/${id}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+
+        if (emailResponse.ok) {
+          message.success('Company approved and notification email sent successfully!')
+        } else {
+          message.warning('Company approved but failed to send notification email')
+        }
         fetchEntries()
       } else {
         message.error('Failed to approve company')
@@ -243,6 +267,50 @@ const CompaniesPage = () => {
       ellipsis: true,
       sorter: (a, b) => (a.directorAddress || '').localeCompare(b.directorAddress || ''),
       render: (address) => address || 'N/A'
+    },
+    {
+      title: 'GST Certificate',
+      dataIndex: 'gstRegistrationCertificate',
+      key: 'gstRegistrationCertificate',
+      width: 120,
+      render: (url) => url ? (
+        <Button type="link" onClick={() => window.open(url, '_blank')}>
+          View Certificate
+        </Button>
+      ) : 'N/A'
+    },
+    {
+      title: 'PAN Card',
+      dataIndex: 'panCardImage',
+      key: 'panCardImage',
+      width: 120,
+      render: (url) => url ? (
+        <Button type="link" onClick={() => window.open(url, '_blank')}>
+          View PAN Card
+        </Button>
+      ) : 'N/A'
+    },
+    {
+      title: 'Director Photo',
+      dataIndex: 'directorPhoto',
+      key: 'directorPhoto',
+      width: 120,
+      render: (url) => url ? (
+        <Button type="link" onClick={() => window.open(url, '_blank')}>
+          View Photo
+        </Button>
+      ) : 'N/A'
+    },
+    {
+      title: 'Director Signature',
+      dataIndex: 'directorSignature',
+      key: 'directorSignature',
+      width: 120,
+      render: (url) => url ? (
+        <Button type="link" onClick={() => window.open(url, '_blank')}>
+          View Signature
+        </Button>
+      ) : 'N/A'
     },
     {
       title: 'Status',
