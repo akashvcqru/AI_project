@@ -15,15 +15,18 @@ namespace UserOnboarding.API.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<AccountController> _logger;
 
         public AccountController(
             ApplicationDbContext context,
             IEmailService emailService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            ILogger<AccountController> logger)
         {
             _context = context;
             _emailService = emailService;
             _configuration = configuration;
+            _logger = logger;
         }
 
         [HttpPost("verify-email")]
