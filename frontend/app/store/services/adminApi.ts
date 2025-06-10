@@ -10,6 +10,10 @@ interface LoginResponse {
   email: string
   isSuperAdmin: boolean
   message?: string
+  user?: {
+    name: string
+    email: string
+  }
 }
 
 interface StatsResponse {
@@ -78,7 +82,7 @@ export const adminApi = createApi({
         body: passwords,
       }),
     }),
-    updateProfile: builder.mutation<{ user: LoginResponse['user'] }, { name: string; email: string }>({
+    updateProfile: builder.mutation<{ message: string }, { name: string; email: string }>({
       query: (profile) => ({
         url: '/Admin/profile',
         method: 'PUT',
