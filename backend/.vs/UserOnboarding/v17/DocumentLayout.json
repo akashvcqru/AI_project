@@ -57,7 +57,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 9,
+          "SelectedChildIndex": 8,
           "Children": [
             {
               "$type": "Bookmark",
@@ -69,17 +69,6 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "Microsoft.Common.CurrentVersion.targets",
-              "DocumentMoniker": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
-              "ToolTip": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
-              "ViewState": "AgIAAI8UAAAAAAAAAAAnwKwUAAA2AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003801|",
-              "WhenOpened": "2025-06-09T13:58:33.427Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 7,
               "Title": "EmailService.cs",
               "DocumentMoniker": "E:\\All_VCQRU_Project\\AI_project\\backend\\UserOnboarding.API\\Services\\EmailService.cs",
@@ -88,8 +77,7 @@
               "RelativeToolTip": "UserOnboarding.API\\Services\\EmailService.cs",
               "ViewState": "AgIAADEAAAAAAAAAAAAqwDoAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-03T08:35:09.896Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-03T08:35:09.896Z"
             },
             {
               "$type": "Document",
@@ -125,8 +113,7 @@
               "RelativeToolTip": "UserOnboarding.API\\appsettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAOAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2025-06-02T12:17:50.896Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-02T12:17:50.896Z"
             },
             {
               "$type": "Document",
@@ -160,10 +147,20 @@
               "RelativeDocumentMoniker": "UserOnboarding.API\\Controllers\\AdminController.cs",
               "ToolTip": "E:\\All_VCQRU_Project\\AI_project\\backend\\UserOnboarding.API\\Controllers\\AdminController.cs",
               "RelativeToolTip": "UserOnboarding.API\\Controllers\\AdminController.cs",
-              "ViewState": "AgIAACEAAAAAAAAAAIA4wCcAAAAhAAAAAAAAAA==",
+              "ViewState": "AgIAACIAAAAAAAAAAAAewCcAAAAhAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-06-09T13:57:49.723Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Microsoft.Common.CurrentVersion.targets",
+              "DocumentMoniker": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
+              "ToolTip": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
+              "ViewState": "AgIAAI8UAAAAAAAAAAAnwKwUAAA2AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003801|",
+              "WhenOpened": "2025-06-09T13:58:33.427Z"
             },
             {
               "$type": "Document",
@@ -175,8 +172,7 @@
               "RelativeToolTip": "UserOnboarding.API\\Controllers\\PanVerificationController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-09T14:02:01.765Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-09T14:02:01.765Z"
             },
             {
               "$type": "Document",
@@ -188,8 +184,7 @@
               "RelativeToolTip": "UserOnboarding.API\\Web.config",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000601|",
-              "WhenOpened": "2025-06-09T13:57:20.894Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-09T13:57:20.894Z"
             },
             {
               "$type": "Document",
@@ -201,8 +196,7 @@
               "RelativeToolTip": "UserOnboarding.API\\Controllers\\AccountController.cs",
               "ViewState": "AgIAAAwAAAAAAAAAAAAAAD4AAAAMAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-02T12:15:47.34Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-02T12:15:47.34Z"
             },
             {
               "$type": "Document",
@@ -214,8 +208,7 @@
               "RelativeToolTip": "UserOnboarding.API\\Program.cs",
               "ViewState": "AgIAACcAAAAAAAAAAAAuwBIAAAA+AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-05-31T21:13:16.345Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-05-31T21:13:16.345Z"
             }
           ]
         }
