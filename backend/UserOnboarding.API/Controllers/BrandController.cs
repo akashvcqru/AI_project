@@ -55,7 +55,7 @@ namespace UserOnboarding.API.Controllers
                 if (user == null)
                 {
                     _logger.LogWarning("No user found with email: {Email}", request.Email);
-                    return NotFound(new { message = "No account found with this email" });
+                    return NotFound(new { message = "This email is not registered. Please enter a registered email address or contact support for assistance." });
                 }
 
                 _logger.LogInformation("User found: {UserId}, HasPassword: {HasPassword}", 

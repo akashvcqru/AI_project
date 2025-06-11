@@ -17,7 +17,22 @@ interface BrandUser {
   id: number
   email: string
   companyName: string
-  directorName: string
+  companyDetails: {
+    name: string
+    category: string
+    websiteUrl: string
+    country: string
+    state: string
+    city: string
+    address: string
+  }
+  directorDetails: {
+    aadharNumber: string
+    panNumber: string
+  }
+  ekyc: {
+    gstNumber: string
+  }
 }
 
 const BrandDashboard = () => {
@@ -53,7 +68,7 @@ const BrandDashboard = () => {
           <Title level={4} className="m-0">Brand Portal</Title>
         </div>
         <div className="flex items-center">
-          <span className="mr-4">Welcome, {user.directorName}</span>
+          <span className="mr-4">Welcome, {user.companyDetails?.name}</span>
           <LogoutOutlined 
             className="text-xl cursor-pointer" 
             onClick={handleLogout}
@@ -81,7 +96,7 @@ const BrandDashboard = () => {
         </Sider>
 
         <Content className="p-6">
-          <Title level={3}>Welcome to {user.companyName}</Title>
+          <Title level={3}>Welcome to {user.companyDetails?.name}</Title>
           
           <Row gutter={16} className="mt-6">
             <Col span={8}>
@@ -116,12 +131,16 @@ const BrandDashboard = () => {
             <Title level={4}>Company Information</Title>
             <Row gutter={[16, 16]} className="mt-4">
               <Col span={12}>
-                <p><strong>Company Name:</strong> {user.companyName}</p>
-                <p><strong>Director Name:</strong> {user.directorName}</p>
+                <p><strong>Company Name:</strong> {user.companyDetails?.name}</p>
+                <p><strong>Category:</strong> {user.companyDetails?.category}</p>
+                <p><strong>Website:</strong> {user.companyDetails?.websiteUrl}</p>
+                <p><strong>Address:</strong> {user.companyDetails?.address}</p>
               </Col>
               <Col span={12}>
                 <p><strong>Email:</strong> {user.email}</p>
-                <p><strong>Status:</strong> Active</p>
+                <p><strong>PAN Number:</strong> {user.directorDetails?.panNumber}</p>
+                <p><strong>GST Number:</strong> {user.ekyc?.gstNumber}</p>
+                <p><strong>Location:</strong> {user.companyDetails?.city}, {user.companyDetails?.state}, {user.companyDetails?.country}</p>
               </Col>
             </Row>
           </Card>

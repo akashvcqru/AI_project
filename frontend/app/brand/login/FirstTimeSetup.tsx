@@ -30,7 +30,7 @@ const FirstTimeSetup = ({ email, onSetupComplete }: FirstTimeSetupProps) => {
 
     setLoading(true)
     try {
-      const response = await fetch('https://localhost:7001/api/brand/setup-password', {
+      const response = await fetch('http://localhost:5000/api/brand/setup-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

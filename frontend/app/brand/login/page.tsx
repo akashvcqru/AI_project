@@ -22,33 +22,57 @@ const BrandLoginPage = () => {
   const onFinish = async (values: LoginForm) => {
     setLoading(true)
     try {
-      const response = await fetch('http://localhost:5000/api/brand/login', {
+      // First verify the email
+      const verifyResponse = await fetch('http://localhost:5000/api/brand/verify-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: values.email
+        }),
+      })
+
+      const verifyData = await verifyResponse.json()
+
+      if (!verifyResponse.ok) {
+        if (verifyResponse.status === 404) {
+          message.error('This email is not registered. Please enter a registered email address or contact support for assistance.')
+        } else {
+          message.error(verifyData.message || 'Email verification failed')
+        }
+        return
+      }
+
+      if (verifyData.isFirstLogin) {
+        setUserEmail(values.email)
+        setIsFirstLogin(true)
+        message.info('Please set up your password')
+        return
+      }
+
+      // If not first login, proceed with password login
+      const loginResponse = await fetch('http://localhost:5000/api/brand/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           email: values.email,
-          password: values.password || '' // Send empty password for first login check
+          password: values.password || ''
         }),
       })
 
-      const data = await response.json()
+      const loginData = await loginResponse.json()
 
-      if (response.ok) {
-        if (data.isFirstLogin) {
-          setUserEmail(values.email)
-          setIsFirstLogin(true)
-          message.info('Please set up your password')
-        } else {
-          // Store the token and user info
-          localStorage.setItem('brandToken', data.token)
-          localStorage.setItem('brandUser', JSON.stringify(data.user))
-          message.success('Login successful!')
-          router.push('/brand/dashboard')
-        }
+      if (loginResponse.ok) {
+        // Store the token and user info
+        localStorage.setItem('brandToken', loginData.token)
+        localStorage.setItem('brandUser', JSON.stringify(loginData.user))
+        message.success('Login successful!')
+        router.push('/brand/dashboard')
       } else {
-        message.error(data.message || 'Invalid email or password')
+        message.error(loginData.message || 'Invalid email or password')
       }
     } catch (error) {
       message.error('Error during login')
