@@ -33,7 +33,7 @@ interface DirectorDetailsRequest {
 export const onboardingApi = createApi({
   reducerPath: 'onboardingApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: 'https://localhost:7001/api',
+    baseUrl: 'http://localhost:5000/api',
     prepareHeaders: (headers, { getState }) => {
       headers.set('Content-Type', 'application/json')
       headers.set('Accept', 'application/json')

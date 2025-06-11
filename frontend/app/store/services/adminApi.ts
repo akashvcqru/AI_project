@@ -38,7 +38,7 @@ interface CompanyEntry {
 export const adminApi = createApi({
   reducerPath: 'adminApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: 'https://localhost:7001/api',
+    baseUrl: 'http://localhost:5000/api',
     prepareHeaders: (headers, { getState }) => {
       const token = (getState() as RootState).auth.token
       if (token) {

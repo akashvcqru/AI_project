@@ -52,7 +52,7 @@ const CompaniesPage = () => {
   const fetchEntries = async () => {
     setLoading(true)
     try {
-      const response = await fetch('https://localhost:7001/api/Admin/onboarding-entries')
+      const response = await fetch('http://localhost:5000/api/Admin/onboarding-entries')
       if (response.ok) {
         const data = await response.json()
         setEntries(data)

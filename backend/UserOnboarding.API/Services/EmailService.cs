@@ -35,8 +35,14 @@ namespace UserOnboarding.API.Services
         {
             try
             {
-                var fromEmail = _configuration["SmtpSettings:FromEmail"];
-                var fromName = _configuration["SmtpSettings:FromName"];
+                var fromEmail = _configuration["SmtpSettings:FromEmail"] ?? "noreply@example.com";
+                var fromName = _configuration["SmtpSettings:FromName"] ?? "System";
+                
+                _logger.LogInformation("Attempting to send OTP email. From: {FromEmail}, To: {ToEmail}", fromEmail, toEmail);
+                _logger.LogInformation("SMTP Settings - Server: {Server}, Port: {Port}, EnableSSL: {EnableSSL}", 
+                    _configuration["SmtpSettings:Server"],
+                    _configuration["SmtpSettings:Port"],
+                    _configuration["SmtpSettings:EnableSsl"]);
 
                 var mailMessage = new MailMessage
                 {

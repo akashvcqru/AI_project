@@ -22,7 +22,7 @@ const BrandLoginPage = () => {
   const onFinish = async (values: LoginForm) => {
     setLoading(true)
     try {
-      const response = await fetch('https://localhost:7001/api/brand/login', {
+      const response = await fetch('http://localhost:5000/api/brand/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
