@@ -68,7 +68,7 @@ const CompaniesPage = () => {
 
   const handleApprove = async (id: number) => {
     try {
-      const response = await fetch(`https://localhost:7001/api/Admin/approve/${id}`, {
+      const response = await fetch(`http://localhost:5000/api/Admin/approve/${id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -77,7 +77,7 @@ const CompaniesPage = () => {
 
       if (response.ok) {
         // Send approval email
-        const emailResponse = await fetch(`https://localhost:7001/api/Admin/send-approval-email/${id}`, {
+        const emailResponse = await fetch(`http://localhost:5000/api/Admin/send-approval-email/${id}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -105,7 +105,7 @@ const CompaniesPage = () => {
     }
 
     try {
-      const response = await fetch(`https://localhost:7001/api/Admin/reject/${selectedEntryId}`, {
+      const response = await fetch(`http://localhost:5000/api/Admin/reject/${selectedEntryId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

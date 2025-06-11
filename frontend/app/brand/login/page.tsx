@@ -8,28 +8,15 @@ import FirstTimeSetup from './FirstTimeSetup'
 
 const { Title, Text } = Typography
 
-interface LoginForm {
-  email: string
-  password?: string
-}
-
 const BrandLoginPage = () => {
   const [loading, setLoading] = useState(false)
-  const [isFirstLogin, setIsFirstLogin] = useState(false)
-  const [userEmail, setUserEmail] = useState('')
+  const [email, setEmail] = useState('')
   const router = useRouter()
   const [showPasswordSetup, setShowPasswordSetup] = useState(false)
   const [showPasswordInput, setShowPasswordInput] = useState(false)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
 
   const handleEmailSubmit = async (values: { email: string }) => {
-    if (!values.email) {
-      message.error('Please enter your email')
-      return
-    }
-
+    setLoading(true)
     try {
       const verifyResponse = await fetch('http://localhost:5000/api/brand/verify-email', {
         method: 'POST',
@@ -45,10 +32,17 @@ const BrandLoginPage = () => {
         if (verifyResponse.status === 404) {
           message.error('This email is not registered. Please enter a registered email address or contact support for assistance.')
         } else if (verifyResponse.status === 400) {
-          message.warning(verifyData.message || 'Your account is pending approval')
+          message.warning('Your account is pending approval. Please wait for admin approval before proceeding.')
+          return
         } else {
           message.error(verifyData.message || 'Email verification failed')
         }
+        return
+      }
+
+      // Check if user is approved
+      if (verifyData.user?.submissionStatus?.status !== 'Approved') {
+        message.warning('Your account is pending approval. Please wait for admin approval before proceeding.')
         return
       }
 
@@ -56,92 +50,88 @@ const BrandLoginPage = () => {
       localStorage.setItem('userData', JSON.stringify(verifyData.user))
       setEmail(values.email)
 
-      if (verifyData.isFirstTimeLogin) {
+      // For approved users
+      if (verifyData.isFirstLogin) {
+        message.success('Email verified. Please set up your password.')
         setShowPasswordSetup(true)
       } else {
+        message.success('Email verified. Please enter your password.')
         setShowPasswordInput(true)
       }
     } catch (error) {
       console.error('Error:', error)
       message.error('An error occurred during email verification')
+    } finally {
+      setLoading(false)
     }
   }
 
   const handlePasswordSubmit = async (values: { password: string }) => {
-    if (!values.password) {
-      message.error('Please enter your password')
-      return
-    }
-
+    setLoading(true)
     try {
-      const loginResponse = await fetch('http://localhost:5000/api/brand/login', {
+      const response = await fetch('http://localhost:5000/api/brand/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password: values.password }),
+        body: JSON.stringify({
+          email,
+          password: values.password,
+        }),
       })
 
-      const loginData = await loginResponse.json()
+      const data = await response.json()
 
-      if (!loginResponse.ok) {
-        message.error(loginData.message || 'Login failed')
-        return
+      if (response.ok) {
+        // Store the token and user info
+        localStorage.setItem('token', data.token)
+        localStorage.setItem('userData', JSON.stringify(data.user))
+        message.success('Login successful!')
+        
+        // Store all profile data from onboarding
+        if (data.user) {
+          // Account Verification
+          if (data.user.email) localStorage.setItem('email', data.user.email)
+          if (data.user.mobileNumber) localStorage.setItem('mobileNumber', data.user.mobileNumber)
+
+          // E-KYC
+          if (data.user.gstNumber) localStorage.setItem('gstNumber', data.user.gstNumber)
+          if (data.user.gstCertificate) localStorage.setItem('gstCertificate', data.user.gstCertificate)
+
+          // Company Details
+          if (data.user.companyName) localStorage.setItem('companyName', data.user.companyName)
+          if (data.user.companyAddress) localStorage.setItem('companyAddress', data.user.companyAddress)
+          if (data.user.city) localStorage.setItem('city', data.user.city)
+          if (data.user.state) localStorage.setItem('state', data.user.state)
+          if (data.user.pincode) localStorage.setItem('pincode', data.user.pincode)
+
+          // Director Details
+          if (data.user.directorName) localStorage.setItem('directorName', data.user.directorName)
+          if (data.user.panNumber) localStorage.setItem('panNumber', data.user.panNumber)
+          if (data.user.panCardImage) localStorage.setItem('panCardImage', data.user.panCardImage)
+          if (data.user.aadharNumber) localStorage.setItem('aadharNumber', data.user.aadharNumber)
+          if (data.user.designation) localStorage.setItem('designation', data.user.designation)
+          if (data.user.directorAddress) localStorage.setItem('directorAddress', data.user.directorAddress)
+          if (data.user.directorPhoto) localStorage.setItem('directorPhoto', data.user.directorPhoto)
+          if (data.user.directorSignature) localStorage.setItem('directorSignature', data.user.directorSignature)
+        }
+        
+        // Redirect to brand dashboard
+        router.push('/brand/dashboard')
+      } else {
+        message.error(data.message || 'Invalid password')
       }
-
-      // Store token and user data
-      localStorage.setItem('token', loginData.token)
-      localStorage.setItem('userData', JSON.stringify(loginData.user))
-
-      // Redirect to dashboard
-      router.push('/brand/dashboard')
     } catch (error) {
       console.error('Error:', error)
       message.error('An error occurred during login')
+    } finally {
+      setLoading(false)
     }
   }
 
-  const handlePasswordSetup = async (values: { password: string; confirmPassword: string }) => {
-    if (!values.password || !values.confirmPassword) {
-      message.error('Please enter and confirm your password')
-      return
-    }
-
-    if (values.password !== values.confirmPassword) {
-      message.error('Passwords do not match')
-      return
-    }
-
-    try {
-      const setupResponse = await fetch('http://localhost:5000/api/brand/setup-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password: values.password }),
-      })
-
-      const setupData = await setupResponse.json()
-
-      if (!setupResponse.ok) {
-        if (setupResponse.status === 400) {
-          message.warning(setupData.message || 'Your account is pending approval')
-        } else {
-          message.error(setupData.message || 'Password setup failed')
-        }
-        return
-      }
-
-      // Store token and user data
-      localStorage.setItem('token', setupData.token)
-      localStorage.setItem('userData', JSON.stringify(setupData.user))
-
-      // Redirect to dashboard
-      router.push('/brand/dashboard')
-    } catch (error) {
-      console.error('Error:', error)
-      message.error('An error occurred during password setup')
-    }
+  const handleSetupComplete = () => {
+    message.success('Password set up successfully!')
+    router.push('/brand/dashboard')
   }
 
   return (
@@ -181,7 +171,7 @@ const BrandLoginPage = () => {
             Brand Login
           </Title>
           <Text type="secondary">
-            {showPasswordSetup ? 'Set up your password' : 'Sign in to access your brand dashboard'}
+            {showPasswordSetup ? 'Set up your password' : showPasswordInput ? 'Enter your password' : 'Sign in to access your brand dashboard'}
           </Text>
         </div>
 
@@ -236,7 +226,7 @@ const BrandLoginPage = () => {
                   fontWeight: '500'
                 }}
               >
-                {loading ? 'Signing In...' : 'Sign In'}
+                {loading ? 'Verifying...' : 'Continue'}
               </Button>
             </Form.Item>
 
@@ -266,7 +256,7 @@ const BrandLoginPage = () => {
         ) : showPasswordSetup ? (
           <FirstTimeSetup 
             email={email} 
-            onSetupComplete={() => setShowPasswordSetup(false)} 
+            onSetupComplete={handleSetupComplete} 
           />
         ) : (
           <Form
