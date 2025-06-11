@@ -1,28 +1,23 @@
 'use client'
 
 import { useState } from 'react'
-import { Form, Input, Button, Card, message, Typography, Steps } from 'antd'
-import { UserOutlined, LockOutlined, SafetyOutlined, LoginOutlined, InfoCircleOutlined } from '@ant-design/icons'
+import { Form, Input, Button, Card, message, Typography } from 'antd'
+import { UserOutlined, LockOutlined, LoginOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import FirstTimeSetup from './FirstTimeSetup'
 
 const { Title, Text } = Typography
 
 interface LoginForm {
   email: string
-  password: string
-}
-
-interface SetupPasswordForm {
-  email: string
-  password: string
-  confirmPassword: string
+  password?: string
 }
 
 const BrandLoginPage = () => {
   const [loading, setLoading] = useState(false)
   const [isFirstLogin, setIsFirstLogin] = useState(false)
-  const [currentStep, setCurrentStep] = useState(0)
+  const [userEmail, setUserEmail] = useState('')
   const router = useRouter()
 
   const onFinish = async (values: LoginForm) => {
@@ -33,15 +28,18 @@ const BrandLoginPage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify({
+          email: values.email,
+          password: values.password || '' // Send empty password for first login check
+        }),
       })
 
       const data = await response.json()
 
       if (response.ok) {
         if (data.isFirstLogin) {
+          setUserEmail(values.email)
           setIsFirstLogin(true)
-          setCurrentStep(1)
           message.info('Please set up your password')
         } else {
           // Store the token and user info
@@ -55,43 +53,6 @@ const BrandLoginPage = () => {
       }
     } catch (error) {
       message.error('Error during login')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const onSetupPassword = async (values: SetupPasswordForm) => {
-    if (values.password !== values.confirmPassword) {
-      message.error('Passwords do not match')
-      return
-    }
-
-    setLoading(true)
-    try {
-      const response = await fetch('https://localhost:7001/api/Brand/setup-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: values.email,
-          password: values.password,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        // Store the token and user info
-        localStorage.setItem('brandToken', data.token)
-        localStorage.setItem('brandUser', JSON.stringify(data.user))
-        message.success('Password set up successfully!')
-        router.push('/brand/dashboard')
-      } else {
-        message.error(data.message || 'Error setting up password')
-      }
-    } catch (error) {
-      message.error('Error during password setup')
     } finally {
       setLoading(false)
     }
@@ -136,25 +97,11 @@ const BrandLoginPage = () => {
               />
             </Form.Item>
 
-            <Form.Item
-              name="password"
-              rules={[
-                { required: true, message: 'Please input your password!' },
-                { min: 6, message: 'Password must be at least 6 characters!' }
-              ]}
-            >
-              <Input.Password
-                prefix={<LockOutlined />}
-                placeholder="Password"
-                className="rounded-lg"
-              />
-            </Form.Item>
-
             <div className="mb-4 p-3 bg-blue-50 rounded-lg">
               <div className="flex items-start">
                 <InfoCircleOutlined className="text-blue-500 mt-1 mr-2" />
                 <Text className="text-sm text-gray-600">
-                  New user? Enter your email and you'll be prompted to set up your password on first login.
+                  Enter your email to continue. If this is your first time, you'll be prompted to set up your password.
                 </Text>
               </div>
             </div>
@@ -167,7 +114,7 @@ const BrandLoginPage = () => {
                 icon={<LoginOutlined />}
                 className="w-full h-12 rounded-lg bg-gradient-to-br from-[#667eea] to-[#764ba2] border-none text-base font-medium"
               >
-                {loading ? 'Signing In...' : 'Sign In'}
+                {loading ? 'Checking...' : 'Continue'}
               </Button>
             </Form.Item>
 
@@ -189,84 +136,10 @@ const BrandLoginPage = () => {
             </div>
           </Form>
         ) : (
-          <Form
-            name="setup_password"
-            onFinish={onSetupPassword}
-            autoComplete="off"
-            size="large"
-            initialValues={{ email: '' }}
-          >
-            <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-              <div className="flex items-start">
-                <InfoCircleOutlined className="text-blue-500 mt-1 mr-2" />
-                <Text className="text-sm text-gray-600">
-                  Welcome! Please set up your password to continue.
-                </Text>
-              </div>
-            </div>
-
-            <Form.Item
-              name="email"
-              rules={[
-                { required: true, message: 'Please input your email!' },
-                { type: 'email', message: 'Please enter a valid email!' }
-              ]}
-            >
-              <Input
-                prefix={<UserOutlined />}
-                placeholder="Email"
-                className="rounded-lg"
-                disabled
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="password"
-              rules={[
-                { required: true, message: 'Please input your password!' },
-                { min: 8, message: 'Password must be at least 8 characters!' }
-              ]}
-            >
-              <Input.Password
-                prefix={<LockOutlined />}
-                placeholder="New Password"
-                className="rounded-lg"
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="confirmPassword"
-              rules={[
-                { required: true, message: 'Please confirm your password!' },
-                ({ getFieldValue }) => ({
-                  validator(_, value) {
-                    if (!value || getFieldValue('password') === value) {
-                      return Promise.resolve()
-                    }
-                    return Promise.reject(new Error('Passwords do not match!'))
-                  },
-                }),
-              ]}
-            >
-              <Input.Password
-                prefix={<LockOutlined />}
-                placeholder="Confirm Password"
-                className="rounded-lg"
-              />
-            </Form.Item>
-
-            <Form.Item className="mb-4">
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={loading}
-                icon={<SafetyOutlined />}
-                className="w-full h-12 rounded-lg bg-gradient-to-br from-[#667eea] to-[#764ba2] border-none text-base font-medium"
-              >
-                {loading ? 'Setting Up...' : 'Set Password'}
-              </Button>
-            </Form.Item>
-          </Form>
+          <FirstTimeSetup 
+            email={userEmail} 
+            onSetupComplete={() => setIsFirstLogin(false)} 
+          />
         )}
 
         {!isFirstLogin && (
