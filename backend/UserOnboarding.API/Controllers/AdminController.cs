@@ -377,7 +377,7 @@ namespace UserOnboarding.API.Controllers
                 await _emailService.SendApprovalEmailAsync(
                     user.Email,
                     user.CompanyDetails?.Name ?? "Company",
-                    user.DirectorDetails?.Name ?? "Director"
+                    "Director"
                 );
 
                 return Ok("Approval email sent successfully to user");

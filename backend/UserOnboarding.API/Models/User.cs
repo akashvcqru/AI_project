@@ -15,6 +15,8 @@ namespace UserOnboarding.API.Models
         public string? OTP { get; set; }
         public DateTime? OTPExpiry { get; set; }
 
+        public string? PasswordHash { get; set; }
+
         public EKYC EKYC { get; set; }
         public CompanyDetails CompanyDetails { get; set; }
         public DirectorDetails DirectorDetails { get; set; }

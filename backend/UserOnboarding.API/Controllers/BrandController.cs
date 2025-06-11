@@ -33,24 +33,38 @@ namespace UserOnboarding.API.Controllers
             _emailService = emailService;
         }
 
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        [HttpPost("verify-email")]
+        public async Task<IActionResult> VerifyEmail([FromBody] EmailVerificationRequest request)
         {
             try
             {
+                _logger.LogInformation("Verifying email: {Email}", request.Email);
+
+                if (string.IsNullOrEmpty(request.Email))
+                {
+                    _logger.LogWarning("Email verification attempt with empty email");
+                    return BadRequest(new { message = "Email is required" });
+                }
+
                 var user = await _context.Users
                     .Include(u => u.CompanyDetails)
                     .Include(u => u.DirectorDetails)
+                    .Include(u => u.EKYC)
                     .FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower());
 
                 if (user == null)
                 {
-                    return Unauthorized(new { message = "Invalid email or password" });
+                    _logger.LogWarning("No user found with email: {Email}", request.Email);
+                    return NotFound(new { message = "No account found with this email" });
                 }
+
+                _logger.LogInformation("User found: {UserId}, HasPassword: {HasPassword}", 
+                    user.Id, !string.IsNullOrEmpty(user.PasswordHash));
 
                 // Check if this is first login (no password set)
                 if (string.IsNullOrEmpty(user.PasswordHash))
                 {
+                    _logger.LogInformation("First login detected for user: {UserId}", user.Id);
                     return Ok(new
                     {
                         isFirstLogin = true,
@@ -59,14 +73,61 @@ namespace UserOnboarding.API.Controllers
                     });
                 }
 
-                // Verify password
-                if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+                // For existing users, return success to proceed with password input
+                return Ok(new
                 {
+                    isFirstLogin = false,
+                    email = user.Email,
+                    message = "Email verified. Please enter your password."
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during email verification for email: {Email}. Error: {ErrorMessage}", 
+                    request.Email, ex.Message);
+                return StatusCode(500, new { message = "An error occurred during email verification", details = ex.Message });
+            }
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("Attempting login for email: {Email}", request.Email);
+
+                if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
+                {
+                    _logger.LogWarning("Login attempt with empty email or password");
+                    return BadRequest(new { message = "Email and password are required" });
+                }
+
+                var user = await _context.Users
+                    .Include(u => u.CompanyDetails)
+                    .Include(u => u.DirectorDetails)
+                    .Include(u => u.EKYC)
+                    .FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower());
+
+                if (user == null)
+                {
+                    _logger.LogWarning("No user found with email: {Email}", request.Email);
+                    return Unauthorized(new { message = "Invalid email or password" });
+                }
+
+                // Verify password
+                bool isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
+                _logger.LogInformation("Password verification result for user {UserId}: {IsValid}", 
+                    user.Id, isPasswordValid);
+
+                if (!isPasswordValid)
+                {
+                    _logger.LogWarning("Invalid password for user: {UserId}", user.Id);
                     return Unauthorized(new { message = "Invalid email or password" });
                 }
 
                 // Generate JWT token
                 var token = GenerateJwtToken(user);
+                _logger.LogInformation("Login successful for user: {UserId}", user.Id);
 
                 return Ok(new
                 {
@@ -76,14 +137,33 @@ namespace UserOnboarding.API.Controllers
                         id = user.Id,
                         email = user.Email,
                         companyName = user.CompanyDetails?.Name,
-                        directorName = user.DirectorDetails?.Name
+                        companyDetails = new
+                        {
+                            name = user.CompanyDetails?.Name,
+                            category = user.CompanyDetails?.Category,
+                            websiteUrl = user.CompanyDetails?.WebsiteUrl,
+                            country = user.CompanyDetails?.Country,
+                            state = user.CompanyDetails?.State,
+                            city = user.CompanyDetails?.City,
+                            address = user.CompanyDetails?.Address
+                        },
+                        directorDetails = new
+                        {
+                            aadharNumber = user.DirectorDetails?.AadharNumber,
+                            panNumber = user.DirectorDetails?.PANNumber
+                        },
+                        ekyc = new
+                        {
+                            gstNumber = user.EKYC?.GSTNumber
+                        }
                     }
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during brand login process");
-                return StatusCode(500, new { message = "An error occurred during login" });
+                _logger.LogError(ex, "Error during brand login process for email: {Email}. Error: {ErrorMessage}", 
+                    request.Email, ex.Message);
+                return StatusCode(500, new { message = "An error occurred during login", details = ex.Message });
             }
         }
 
@@ -93,6 +173,9 @@ namespace UserOnboarding.API.Controllers
             try
             {
                 var user = await _context.Users
+                    .Include(u => u.CompanyDetails)
+                    .Include(u => u.DirectorDetails)
+                    .Include(u => u.EKYC)
                     .FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower());
 
                 if (user == null)
@@ -127,7 +210,25 @@ namespace UserOnboarding.API.Controllers
                         id = user.Id,
                         email = user.Email,
                         companyName = user.CompanyDetails?.Name,
-                        directorName = user.DirectorDetails?.Name
+                        companyDetails = new
+                        {
+                            name = user.CompanyDetails?.Name,
+                            category = user.CompanyDetails?.Category,
+                            websiteUrl = user.CompanyDetails?.WebsiteUrl,
+                            country = user.CompanyDetails?.Country,
+                            state = user.CompanyDetails?.State,
+                            city = user.CompanyDetails?.City,
+                            address = user.CompanyDetails?.Address
+                        },
+                        directorDetails = new
+                        {
+                            aadharNumber = user.DirectorDetails?.AadharNumber,
+                            panNumber = user.DirectorDetails?.PANNumber
+                        },
+                        ekyc = new
+                        {
+                            gstNumber = user.EKYC?.GSTNumber
+                        }
                     },
                     message = "Password set up successfully"
                 });
