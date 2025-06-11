@@ -34,58 +34,72 @@ namespace UserOnboarding.API.Controllers
         }
 
         [HttpPost("verify-email")]
-        public async Task<IActionResult> VerifyEmail([FromBody] EmailVerificationRequest request)
+        public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request)
         {
             try
             {
-                _logger.LogInformation("Verifying email: {Email}", request.Email);
-
-                if (string.IsNullOrEmpty(request.Email))
-                {
-                    _logger.LogWarning("Email verification attempt with empty email");
-                    return BadRequest(new { message = "Email is required" });
-                }
-
                 var user = await _context.Users
                     .Include(u => u.CompanyDetails)
                     .Include(u => u.DirectorDetails)
                     .Include(u => u.EKYC)
+                    .Include(u => u.SubmissionStatus)
                     .FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower());
 
                 if (user == null)
                 {
-                    _logger.LogWarning("No user found with email: {Email}", request.Email);
-                    return NotFound(new { message = "This email is not registered. Please enter a registered email address or contact support for assistance." });
-                }
-
-                _logger.LogInformation("User found: {UserId}, HasPassword: {HasPassword}", 
-                    user.Id, !string.IsNullOrEmpty(user.PasswordHash));
-
-                // Check if this is first login (no password set)
-                if (string.IsNullOrEmpty(user.PasswordHash))
-                {
-                    _logger.LogInformation("First login detected for user: {UserId}", user.Id);
-                    return Ok(new
-                    {
-                        isFirstLogin = true,
-                        email = user.Email,
-                        message = "First login detected. Please set up your password."
+                    _logger.LogWarning("Login attempt with unregistered email: {Email}", request.Email);
+                    return NotFound(new { 
+                        message = "This email is not registered. Please enter a registered email address or contact support for assistance."
                     });
                 }
 
-                // For existing users, return success to proceed with password input
+                // Check if user is approved
+                if (user.SubmissionStatus?.Status != "Approved")
+                {
+                    _logger.LogWarning("Unapproved user attempting to login: {Email}", request.Email);
+                    return BadRequest(new { 
+                        message = "Your account is pending approval. Please wait for admin approval before setting up your password.",
+                        status = user.SubmissionStatus?.Status
+                    });
+                }
+
+                // Check if this is first time login
+                var isFirstTimeLogin = string.IsNullOrEmpty(user.PasswordHash);
+
                 return Ok(new
                 {
-                    isFirstLogin = false,
-                    email = user.Email,
-                    message = "Email verified. Please enter your password."
+                    isFirstTimeLogin,
+                    user = new
+                    {
+                        id = user.Id,
+                        email = user.Email,
+                        companyName = user.CompanyDetails?.Name,
+                        companyDetails = new
+                        {
+                            name = user.CompanyDetails?.Name,
+                            category = user.CompanyDetails?.Category,
+                            websiteUrl = user.CompanyDetails?.WebsiteUrl,
+                            country = user.CompanyDetails?.Country,
+                            state = user.CompanyDetails?.State,
+                            city = user.CompanyDetails?.City,
+                            address = user.CompanyDetails?.Address
+                        },
+                        directorDetails = new
+                        {
+                            aadharNumber = user.DirectorDetails?.AadharNumber,
+                            panNumber = user.DirectorDetails?.PANNumber
+                        },
+                        ekyc = new
+                        {
+                            gstNumber = user.EKYC?.GSTNumber
+                        }
+                    }
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during email verification for email: {Email}. Error: {ErrorMessage}", 
-                    request.Email, ex.Message);
-                return StatusCode(500, new { message = "An error occurred during email verification", details = ex.Message });
+                _logger.LogError(ex, "Error during email verification");
+                return StatusCode(500, new { message = "An error occurred during email verification" });
             }
         }
 
@@ -176,11 +190,21 @@ namespace UserOnboarding.API.Controllers
                     .Include(u => u.CompanyDetails)
                     .Include(u => u.DirectorDetails)
                     .Include(u => u.EKYC)
+                    .Include(u => u.SubmissionStatus)
                     .FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower());
 
                 if (user == null)
                 {
                     return NotFound(new { message = "User not found" });
+                }
+
+                // Check if user is approved
+                if (user.SubmissionStatus?.Status != "Approved")
+                {
+                    return BadRequest(new { 
+                        message = "Your account is pending approval. Please wait for admin approval before setting up your password.",
+                        status = user.SubmissionStatus?.Status
+                    });
                 }
 
                 // Check if password is already set
