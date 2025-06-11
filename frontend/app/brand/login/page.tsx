@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { Form, Input, Button, Card, message, Typography } from 'antd'
 import { UserOutlined, LockOutlined, LoginOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import FirstTimeSetup from './FirstTimeSetup'
 
 const { Title, Text } = Typography
@@ -23,7 +22,7 @@ const BrandLoginPage = () => {
   const onFinish = async (values: LoginForm) => {
     setLoading(true)
     try {
-      const response = await fetch('https://localhost:7001/api/Brand/login', {
+      const response = await fetch('https://localhost:7001/api/brand/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -59,16 +58,39 @@ const BrandLoginPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex justify-center items-center p-5 bg-gradient-to-br from-[#667eea] to-[#764ba2]">
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: '20px'
+    }}>
       <Card
-        className="w-full max-w-[400px] shadow-2xl rounded-xl border-none"
+        style={{
+          width: '100%',
+          maxWidth: '400px',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+          borderRadius: '12px'
+        }}
         bordered={false}
       >
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center text-white text-2xl">
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 16px',
+            color: 'white',
+            fontSize: '24px'
+          }}>
             <UserOutlined />
           </div>
-          <Title level={2} className="m-0 text-gray-800">
+          <Title level={2} style={{ margin: 0, color: '#1f2937' }}>
             Brand Login
           </Title>
           <Text type="secondary">
@@ -93,43 +115,62 @@ const BrandLoginPage = () => {
               <Input
                 prefix={<UserOutlined />}
                 placeholder="Email"
-                className="rounded-lg"
+                style={{ borderRadius: '8px' }}
               />
             </Form.Item>
 
-            <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-              <div className="flex items-start">
-                <InfoCircleOutlined className="text-blue-500 mt-1 mr-2" />
-                <Text className="text-sm text-gray-600">
+            <div style={{
+              marginBottom: '16px',
+              padding: '12px',
+              background: '#ebf5ff',
+              borderRadius: '8px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+                <InfoCircleOutlined style={{ color: '#1890ff', marginTop: '4px', marginRight: '8px' }} />
+                <Text style={{ fontSize: '14px', color: '#4b5563' }}>
                   Enter your email to continue. If this is your first time, you'll be prompted to set up your password.
                 </Text>
               </div>
             </div>
 
-            <Form.Item className="mb-4">
+            <Form.Item style={{ marginBottom: '16px' }}>
               <Button
                 type="primary"
                 htmlType="submit"
                 loading={loading}
                 icon={<LoginOutlined />}
-                className="w-full h-12 rounded-lg bg-gradient-to-br from-[#667eea] to-[#764ba2] border-none text-base font-medium"
+                style={{
+                  width: '100%',
+                  height: '48px',
+                  borderRadius: '8px',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  border: 'none',
+                  fontSize: '16px',
+                  fontWeight: '500'
+                }}
               >
-                {loading ? 'Checking...' : 'Continue'}
+                {loading ? 'Signing In...' : 'Sign In'}
               </Button>
             </Form.Item>
 
-            <div className="flex justify-between items-center mb-6 text-sm">
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '24px',
+              fontSize: '14px'
+            }}>
               <Button 
                 type="link" 
                 onClick={() => router.push('/brand/forgot-password')}
-                className="p-0 text-[#667eea] text-sm"
+                style={{ padding: 0, color: '#667eea', fontSize: '14px' }}
               >
                 Forgot Password?
               </Button>
               <Button 
                 type="link" 
                 onClick={() => router.push('/onboarding')}
-                className="p-0 text-[#667eea] text-sm"
+                style={{ padding: 0, color: '#667eea', fontSize: '14px' }}
               >
                 New to VCQRU?
               </Button>
@@ -143,12 +184,17 @@ const BrandLoginPage = () => {
         )}
 
         {!isFirstLogin && (
-          <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <Text type="secondary" className="text-xs">
+          <div style={{
+            textAlign: 'center',
+            padding: '16px',
+            background: '#f8fafc',
+            borderRadius: '8px'
+          }}>
+            <Text type="secondary" style={{ fontSize: '12px' }}>
               Need help? Contact support at:
             </Text>
             <br />
-            <Text code className="text-xs">
+            <Text code style={{ fontSize: '12px' }}>
               support@vcqru.com
             </Text>
           </div>

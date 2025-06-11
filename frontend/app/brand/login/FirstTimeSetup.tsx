@@ -30,7 +30,7 @@ const FirstTimeSetup = ({ email, onSetupComplete }: FirstTimeSetupProps) => {
 
     setLoading(true)
     try {
-      const response = await fetch('https://localhost:7001/api/Brand/setup-password', {
+      const response = await fetch('https://localhost:7001/api/brand/setup-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -48,7 +48,6 @@ const FirstTimeSetup = ({ email, onSetupComplete }: FirstTimeSetupProps) => {
         localStorage.setItem('brandToken', data.token)
         localStorage.setItem('brandUser', JSON.stringify(data.user))
         message.success('Password set up successfully!')
-        onSetupComplete()
         router.push('/brand/dashboard')
       } else {
         message.error(data.message || 'Error setting up password')
@@ -61,12 +60,23 @@ const FirstTimeSetup = ({ email, onSetupComplete }: FirstTimeSetupProps) => {
   }
 
   return (
-    <div className="w-full">
-      <div className="text-center mb-8">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center text-white text-2xl">
+    <div style={{ width: '100%' }}>
+      <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+        <div style={{
+          width: '64px',
+          height: '64px',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: '0 auto 16px',
+          color: 'white',
+          fontSize: '24px'
+        }}>
           <SafetyOutlined />
         </div>
-        <Title level={2} className="m-0 text-gray-800">
+        <Title level={2} style={{ margin: 0, color: '#1f2937' }}>
           Set Up Your Password
         </Title>
         <Text type="secondary">
@@ -74,14 +84,19 @@ const FirstTimeSetup = ({ email, onSetupComplete }: FirstTimeSetupProps) => {
         </Text>
       </div>
 
-      <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-        <div className="flex items-start">
-          <InfoCircleOutlined className="text-blue-500 mt-1 mr-2" />
+      <div style={{
+        marginBottom: '24px',
+        padding: '16px',
+        background: '#ebf5ff',
+        borderRadius: '8px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+          <InfoCircleOutlined style={{ color: '#1890ff', marginTop: '4px', marginRight: '8px' }} />
           <div>
-            <Text className="text-sm text-gray-600 block mb-2">
+            <Text style={{ fontSize: '14px', color: '#4b5563', display: 'block', marginBottom: '8px' }}>
               Your password must meet the following requirements:
             </Text>
-            <ul className="text-sm text-gray-600 list-disc pl-5">
+            <ul style={{ fontSize: '14px', color: '#4b5563', paddingLeft: '20px', margin: 0 }}>
               <li>At least 8 characters long</li>
               <li>Include at least one uppercase letter</li>
               <li>Include at least one number</li>
@@ -108,7 +123,7 @@ const FirstTimeSetup = ({ email, onSetupComplete }: FirstTimeSetupProps) => {
           <Input
             prefix={<UserOutlined />}
             placeholder="Email"
-            className="rounded-lg"
+            style={{ borderRadius: '8px' }}
             disabled
           />
         </Form.Item>
@@ -123,11 +138,12 @@ const FirstTimeSetup = ({ email, onSetupComplete }: FirstTimeSetupProps) => {
               message: 'Password must include uppercase, lowercase, number and special character!'
             }
           ]}
+          help="Password must be at least 8 characters and include uppercase, lowercase, number and special character"
         >
           <Input.Password
             prefix={<LockOutlined />}
             placeholder="New Password"
-            className="rounded-lg"
+            style={{ borderRadius: '8px' }}
           />
         </Form.Item>
 
@@ -148,17 +164,25 @@ const FirstTimeSetup = ({ email, onSetupComplete }: FirstTimeSetupProps) => {
           <Input.Password
             prefix={<LockOutlined />}
             placeholder="Confirm Password"
-            className="rounded-lg"
+            style={{ borderRadius: '8px' }}
           />
         </Form.Item>
 
-        <Form.Item className="mb-4">
+        <Form.Item style={{ marginBottom: '16px' }}>
           <Button
             type="primary"
             htmlType="submit"
             loading={loading}
             icon={<SafetyOutlined />}
-            className="w-full h-12 rounded-lg bg-gradient-to-br from-[#667eea] to-[#764ba2] border-none text-base font-medium"
+            style={{
+              width: '100%',
+              height: '48px',
+              borderRadius: '8px',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              border: 'none',
+              fontSize: '16px',
+              fontWeight: '500'
+            }}
           >
             {loading ? 'Setting Up...' : 'Set Password'}
           </Button>
