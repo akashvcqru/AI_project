@@ -63,39 +63,16 @@ const AdminLoginPage = () => {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: '20px'
-    }}>
+    <div className="min-h-screen bg-gradient-to-r from-[#667eea] to-[#764ba2] flex justify-center items-center p-5">
       <Card
-        style={{
-          width: '100%',
-          maxWidth: '400px',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-          borderRadius: '12px'
-        }}
+        className="w-full max-w-[400px] shadow-[0_10px_30px_rgba(0,0,0,0.2)] rounded-xl"
         bordered={false}
       >
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{
-            width: '64px',
-            height: '64px',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 16px',
-            color: 'white',
-            fontSize: '24px'
-          }}>
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-gradient-to-r from-[#667eea] to-[#764ba2] rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl">
             <UserOutlined />
           </div>
-          <Title level={2} style={{ margin: 0, color: '#1f2937' }}>
+          <Title level={2} className="m-0 text-gray-800">
             Admin Login
           </Title>
           <Text type="secondary">
@@ -124,7 +101,7 @@ const AdminLoginPage = () => {
             <Input
               prefix={<UserOutlined />}
               placeholder="Email"
-              style={{ borderRadius: '8px' }}
+              className="rounded-lg"
             />
           </Form.Item>
 
@@ -138,47 +115,33 @@ const AdminLoginPage = () => {
             <Input.Password
               prefix={<LockOutlined />}
               placeholder="Password"
-              style={{ borderRadius: '8px' }}
+              className="rounded-lg"
             />
           </Form.Item>
 
-          <Form.Item style={{ marginBottom: '16px' }}>
+          <Form.Item className="mb-4">
             <Button
               type="primary"
               htmlType="submit"
               loading={loading}
               icon={<LoginOutlined />}
-              style={{
-                width: '100%',
-                height: '48px',
-                borderRadius: '8px',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                border: 'none',
-                fontSize: '16px',
-                fontWeight: '500'
-              }}
+              className="w-full h-12 rounded-lg bg-gradient-to-r from-[#667eea] to-[#764ba2] border-none text-base font-medium"
             >
               {loading ? 'Signing In...' : 'Sign In'}
             </Button>
           </Form.Item>
         </Form>
 
-        <div style={{
-          textAlign: 'center', 
-          marginTop: '24px',
-          padding: '16px',
-          background: '#f8fafc',
-          borderRadius: '8px'
-        }}>
-          <Text type="secondary" style={{ fontSize: '12px' }}>
+        <div className="text-center mt-6 p-4 bg-gray-50 rounded-lg">
+          <Text type="secondary" className="text-xs">
             Super Admin Credentials:
           </Text>
           <br />
-          <Text code style={{ fontSize: '12px' }}>
+          <Text code className="text-xs">
             Email: superadmin@vcqru.com
           </Text>
           <br />
-          <Text code style={{ fontSize: '12px' }}>
+          <Text code className="text-xs">
             Password: VCQRU@2024
           </Text>
         </div>

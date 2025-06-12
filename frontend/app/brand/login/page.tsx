@@ -171,40 +171,17 @@ const BrandLoginPage = () => {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: '20px'
-    }}>
+    <div className="min-h-screen bg-gradient-to-r from-[#667eea] to-[#764ba2] flex justify-center items-center p-5">
       <Card
-        style={{
-          width: '100%',
-          maxWidth: '400px',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-          borderRadius: '12px'
-        }}
+        className="w-full max-w-[400px] shadow-[0_10px_30px_rgba(0,0,0,0.2)] rounded-xl"
         bordered={false}
       >
         {!showPasswordSetup && (
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <div style={{
-              width: '64px',
-              height: '64px',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 16px',
-              color: 'white',
-              fontSize: '24px'
-            }}>
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-gradient-to-r from-[#667eea] to-[#764ba2] rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl">
               <UserOutlined />
             </div>
-            <Title level={2} style={{ margin: 0, color: '#1f2937' }}>
+            <Title level={2} className="m-0 text-gray-800">
               Brand Login
             </Title>
             <Text type="secondary">
@@ -236,26 +213,17 @@ const BrandLoginPage = () => {
               <Input.Password
                 prefix={<LockOutlined />}
                 placeholder="Password"
-                style={{ borderRadius: '8px' }}
+                className="rounded-lg"
               />
             </Form.Item>
 
-            <Form.Item style={{ marginBottom: '16px' }}>
+            <Form.Item className="mb-4">
               <Button
                 type="primary"
                 htmlType="submit"
-                className="w-full"
+                className="w-full h-12 rounded-lg bg-gradient-to-r from-[#667eea] to-[#764ba2] border-none text-base font-medium"
                 loading={loading}
                 icon={<LoginOutlined />}
-                style={{
-                  width: '100%',
-                  height: '48px',
-                  borderRadius: '8px',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  border: 'none',
-                  fontSize: '16px',
-                  fontWeight: '500'
-                }}
               >
                 {loading ? 'Signing in...' : 'Login'}
               </Button>
@@ -274,40 +242,29 @@ const BrandLoginPage = () => {
               </Button>
             </Form.Item>
 
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '24px',
-              fontSize: '14px'
-            }}>
+            <div className="flex justify-between items-center mb-6 text-sm">
               <Button 
                 type="link" 
                 onClick={() => router.push('/brand/forgot-password')}
-                style={{ padding: 0, color: '#667eea', fontSize: '14px' }}
+                className="p-0 text-[#667eea] text-sm"
               >
                 Forgot Password?
               </Button>
               <Button 
                 type="link" 
                 onClick={() => router.push('/onboarding')}
-                style={{ padding: 0, color: '#667eea', fontSize: '14px' }}
+                className="p-0 text-[#667eea] text-sm"
               >
                 New to VCQRU?
               </Button>
             </div>
 
-            <div style={{
-              textAlign: 'center',
-              padding: '16px',
-              background: '#f8fafc',
-              borderRadius: '8px'
-            }}>
-              <Text type="secondary" style={{ fontSize: '12px' }}>
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <Text type="secondary" className="text-xs">
                 Need help? Contact support at:
               </Text>
               <br />
-              <Text code style={{ fontSize: '12px' }}>
+              <Text code className="text-xs">
                 support@vcqru.com
               </Text>
             </div>
@@ -329,65 +286,45 @@ const BrandLoginPage = () => {
               <Input
                 prefix={<UserOutlined />}
                 placeholder="Email"
-                style={{ borderRadius: '8px' }}
+                className="rounded-lg"
               />
             </Form.Item>
 
-            <Form.Item style={{ marginBottom: '16px' }}>
+            <Form.Item className="mb-4">
               <Button
                 type="primary"
                 htmlType="submit"
-                className="w-full"
+                className="w-full h-12 rounded-lg bg-gradient-to-r from-[#667eea] to-[#764ba2] border-none text-base font-medium"
                 loading={loading}
                 icon={<LoginOutlined />}
-                style={{
-                  width: '100%',
-                  height: '48px',
-                  borderRadius: '8px',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  border: 'none',
-                  fontSize: '16px',
-                  fontWeight: '500'
-                }}
               >
-                {loading ? 'Signing in...' : 'Login'}
+                {loading ? 'Verifying...' : 'Continue'}
               </Button>
             </Form.Item>
 
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '24px',
-              fontSize: '14px'
-            }}>
+            <div className="flex justify-between items-center mb-6 text-sm">
               <Button 
                 type="link" 
                 onClick={() => router.push('/brand/forgot-password')}
-                style={{ padding: 0, color: '#667eea', fontSize: '14px' }}
+                className="p-0 text-[#667eea] text-sm"
               >
                 Forgot Password?
               </Button>
               <Button 
                 type="link" 
                 onClick={() => router.push('/onboarding')}
-                style={{ padding: 0, color: '#667eea', fontSize: '14px' }}
+                className="p-0 text-[#667eea] text-sm"
               >
                 New to VCQRU?
               </Button>
             </div>
 
-            <div style={{
-              textAlign: 'center',
-              padding: '16px',
-              background: '#f8fafc',
-              borderRadius: '8px'
-            }}>
-              <Text type="secondary" style={{ fontSize: '12px' }}>
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <Text type="secondary" className="text-xs">
                 Need help? Contact support at:
               </Text>
               <br />
-              <Text code style={{ fontSize: '12px' }}>
+              <Text code className="text-xs">
                 support@vcqru.com
               </Text>
             </div>
