@@ -1,12 +1,36 @@
 'use client'
 
-import { useState } from 'react'
-import { Form, Input, Button, Card, message, Typography } from 'antd'
-import { UserOutlined, LockOutlined, LoginOutlined, InfoCircleOutlined } from '@ant-design/icons'
+import { useState, useEffect } from 'react'
+import { Form, Input, Button, Card, message, Typography, Checkbox } from 'antd'
+import { UserOutlined, LockOutlined, LoginOutlined, InfoCircleOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
 import FirstTimeSetup from './FirstTimeSetup'
 
 const { Title, Text } = Typography
+
+interface PasswordRequirement {
+  text: string;
+  validator: (password: string) => boolean;
+}
+
+const passwordRequirements: PasswordRequirement[] = [
+  {
+    text: 'At least 8 characters long',
+    validator: (password) => password.length >= 8
+  },
+  {
+    text: 'Include at least one uppercase letter',
+    validator: (password) => /[A-Z]/.test(password)
+  },
+  {
+    text: 'Include at least one number',
+    validator: (password) => /[0-9]/.test(password)
+  },
+  {
+    text: 'Include at least one special character',
+    validator: (password) => /[!@#$%^&*(),.?":{}|<>]/.test(password)
+  }
+]
 
 const BrandLoginPage = () => {
   const [loading, setLoading] = useState(false)
@@ -14,6 +38,8 @@ const BrandLoginPage = () => {
   const router = useRouter()
   const [showPasswordSetup, setShowPasswordSetup] = useState(false)
   const [showPasswordInput, setShowPasswordInput] = useState(false)
+  const [password, setPassword] = useState('')
+  const [passwordFocused, setPasswordFocused] = useState(false)
 
   const handleEmailSubmit = async (values: { email: string }) => {
     setLoading(true)
@@ -124,6 +150,26 @@ const BrandLoginPage = () => {
     router.push('/brand/dashboard')
   }
 
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value)
+  }
+
+  const PasswordRequirementItem = ({ requirement, password }: { requirement: PasswordRequirement; password: string }) => {
+    const isMet = requirement.validator(password)
+    return (
+      <div className="flex items-center gap-2 mb-2">
+        {isMet ? (
+          <CheckCircleOutlined className="text-green-500" />
+        ) : (
+          <CloseCircleOutlined className="text-red-500" />
+        )}
+        <Text style={{ color: isMet ? '#22c55e' : '#ef4444' }}>
+          {requirement.text}
+        </Text>
+      </div>
+    )
+  }
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -142,68 +188,63 @@ const BrandLoginPage = () => {
         }}
         bordered={false}
       >
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{
-            width: '64px',
-            height: '64px',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 16px',
-            color: 'white',
-            fontSize: '24px'
-          }}>
-            <UserOutlined />
+        {!showPasswordSetup && (
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <div style={{
+              width: '64px',
+              height: '64px',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 16px',
+              color: 'white',
+              fontSize: '24px'
+            }}>
+              <UserOutlined />
+            </div>
+            <Title level={2} style={{ margin: 0, color: '#1f2937' }}>
+              Brand Login
+            </Title>
+            <Text type="secondary">
+              {showPasswordInput ? 'Enter your password' : 'Sign in to access your brand dashboard'}
+            </Text>
           </div>
-          <Title level={2} style={{ margin: 0, color: '#1f2937' }}>
-            Brand Login
-          </Title>
-          <Text type="secondary">
-            {showPasswordSetup ? 'Set up your password' : showPasswordInput ? 'Enter your password' : 'Sign in to access your brand dashboard'}
-          </Text>
-        </div>
+        )}
 
-        {!showPasswordSetup && !showPasswordInput ? (
+        {showPasswordSetup ? (
+          <FirstTimeSetup
+            email={email}
+            onSetupComplete={handleSetupComplete}
+            onBack={() => {
+              setShowPasswordSetup(false)
+              setShowPasswordInput(false)
+            }}
+          />
+        ) : showPasswordInput ? (
           <Form
-            name="brand_login"
-            onFinish={handleEmailSubmit}
+            name="password_login"
+            onFinish={handlePasswordSubmit}
             autoComplete="off"
             size="large"
           >
             <Form.Item
-              name="email"
-              rules={[
-                { required: true, message: 'Please input your email!' },
-                { type: 'email', message: 'Please enter a valid email!' }
-              ]}
+              name="password"
+              rules={[{ required: true, message: 'Please input your password!' }]}
             >
-              <Input
-                prefix={<UserOutlined />}
-                placeholder="Email"
+              <Input.Password
+                prefix={<LockOutlined />}
+                placeholder="Password"
                 style={{ borderRadius: '8px' }}
               />
             </Form.Item>
-
-            <div style={{
-              marginBottom: '16px',
-              padding: '12px',
-              background: '#ebf5ff',
-              borderRadius: '8px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-                <InfoCircleOutlined style={{ color: '#1890ff', marginTop: '4px', marginRight: '8px' }} />
-                <Text style={{ fontSize: '14px', color: '#4b5563' }}>
-                  Enter your email to continue. If this is your first time, you'll be prompted to set up your password.
-                </Text>
-              </div>
-            </div>
 
             <Form.Item style={{ marginBottom: '16px' }}>
               <Button
                 type="primary"
                 htmlType="submit"
+                className="w-full"
                 loading={loading}
                 icon={<LoginOutlined />}
                 style={{
@@ -216,7 +257,20 @@ const BrandLoginPage = () => {
                   fontWeight: '500'
                 }}
               >
-                {loading ? 'Verifying...' : 'Continue'}
+                {loading ? 'Signing in...' : 'Login'}
+              </Button>
+            </Form.Item>
+
+            <Form.Item>
+              <Button
+                type="link"
+                onClick={() => {
+                  setShowPasswordInput(false)
+                  setEmail('')
+                }}
+                className="w-full"
+              >
+                Back to Email
               </Button>
             </Form.Item>
 
@@ -242,28 +296,39 @@ const BrandLoginPage = () => {
                 New to VCQRU?
               </Button>
             </div>
+
+            <div style={{
+              textAlign: 'center',
+              padding: '16px',
+              background: '#f8fafc',
+              borderRadius: '8px'
+            }}>
+              <Text type="secondary" style={{ fontSize: '12px' }}>
+                Need help? Contact support at:
+              </Text>
+              <br />
+              <Text code style={{ fontSize: '12px' }}>
+                support@vcqru.com
+              </Text>
+            </div>
           </Form>
-        ) : showPasswordSetup ? (
-          <FirstTimeSetup 
-            email={email} 
-            onSetupComplete={handleSetupComplete} 
-          />
         ) : (
           <Form
-            name="brand_password"
-            onFinish={handlePasswordSubmit}
+            name="email_login"
+            onFinish={handleEmailSubmit}
             autoComplete="off"
             size="large"
           >
             <Form.Item
-              name="password"
+              name="email"
               rules={[
-                { required: true, message: 'Please input your password!' },
+                { required: true, message: 'Please input your email!' },
+                { type: 'email', message: 'Please enter a valid email!' }
               ]}
             >
-              <Input.Password
-                prefix={<LockOutlined />}
-                placeholder="Password"
+              <Input
+                prefix={<UserOutlined />}
+                placeholder="Email"
                 style={{ borderRadius: '8px' }}
               />
             </Form.Item>
@@ -272,6 +337,7 @@ const BrandLoginPage = () => {
               <Button
                 type="primary"
                 htmlType="submit"
+                className="w-full"
                 loading={loading}
                 icon={<LoginOutlined />}
                 style={{
@@ -284,27 +350,48 @@ const BrandLoginPage = () => {
                   fontWeight: '500'
                 }}
               >
-                {loading ? 'Signing In...' : 'Sign In'}
+                {loading ? 'Signing in...' : 'Login'}
               </Button>
             </Form.Item>
-          </Form>
-        )}
 
-        {!showPasswordSetup && !showPasswordInput && (
-          <div style={{
-            textAlign: 'center',
-            padding: '16px',
-            background: '#f8fafc',
-            borderRadius: '8px'
-          }}>
-            <Text type="secondary" style={{ fontSize: '12px' }}>
-              Need help? Contact support at:
-            </Text>
-            <br />
-            <Text code style={{ fontSize: '12px' }}>
-              support@vcqru.com
-            </Text>
-          </div>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '24px',
+              fontSize: '14px'
+            }}>
+              <Button 
+                type="link" 
+                onClick={() => router.push('/brand/forgot-password')}
+                style={{ padding: 0, color: '#667eea', fontSize: '14px' }}
+              >
+                Forgot Password?
+              </Button>
+              <Button 
+                type="link" 
+                onClick={() => router.push('/onboarding')}
+                style={{ padding: 0, color: '#667eea', fontSize: '14px' }}
+              >
+                New to VCQRU?
+              </Button>
+            </div>
+
+            <div style={{
+              textAlign: 'center',
+              padding: '16px',
+              background: '#f8fafc',
+              borderRadius: '8px'
+            }}>
+              <Text type="secondary" style={{ fontSize: '12px' }}>
+                Need help? Contact support at:
+              </Text>
+              <br />
+              <Text code style={{ fontSize: '12px' }}>
+                support@vcqru.com
+              </Text>
+            </div>
+          </Form>
         )}
       </Card>
     </div>

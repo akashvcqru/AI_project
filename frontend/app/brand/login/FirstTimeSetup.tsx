@@ -1,7 +1,7 @@
 'use client'
 
 import { Form, Input, Button, message, Typography } from 'antd'
-import { UserOutlined, LockOutlined, SafetyOutlined, InfoCircleOutlined } from '@ant-design/icons'
+import { UserOutlined, LockOutlined, SafetyOutlined, CheckCircleOutlined, CloseCircleOutlined, LoginOutlined } from '@ant-design/icons'
 import { useState } from 'react'
 
 const { Title, Text } = Typography
@@ -15,10 +15,36 @@ interface SetupPasswordForm {
 interface FirstTimeSetupProps {
   email: string
   onSetupComplete: () => void
+  onBack: () => void
 }
 
-const FirstTimeSetup = ({ email, onSetupComplete }: FirstTimeSetupProps) => {
+interface PasswordRequirement {
+  text: string;
+  validator: (password: string) => boolean;
+}
+
+const passwordRequirements: PasswordRequirement[] = [
+  {
+    text: 'At least 8 characters long',
+    validator: (password) => password.length >= 8
+  },
+  {
+    text: 'Include at least one uppercase letter',
+    validator: (password) => /[A-Z]/.test(password)
+  },
+  {
+    text: 'Include at least one number',
+    validator: (password) => /[0-9]/.test(password)
+  },
+  {
+    text: 'Include at least one special character',
+    validator: (password) => /[!@#$%^&*(),.?":{}|<>]/.test(password)
+  }
+]
+
+const FirstTimeSetup = ({ email, onSetupComplete, onBack }: FirstTimeSetupProps) => {
   const [loading, setLoading] = useState(false)
+  const [password, setPassword] = useState('')
 
   const onSetupPassword = async (values: SetupPasswordForm) => {
     setLoading(true)
@@ -37,38 +63,8 @@ const FirstTimeSetup = ({ email, onSetupComplete }: FirstTimeSetupProps) => {
       const data = await response.json()
 
       if (response.ok) {
-        // Store the token and user info
-        localStorage.setItem('token', data.token)
-        localStorage.setItem('userData', JSON.stringify(data.user))
-        
-        // Store all profile data from onboarding
-        if (data.user) {
-          // Account Verification
-          if (data.user.email) localStorage.setItem('email', data.user.email)
-          if (data.user.mobileNumber) localStorage.setItem('mobileNumber', data.user.mobileNumber)
-
-          // E-KYC
-          if (data.user.gstNumber) localStorage.setItem('gstNumber', data.user.gstNumber)
-          if (data.user.gstCertificate) localStorage.setItem('gstCertificate', data.user.gstCertificate)
-
-          // Company Details
-          if (data.user.companyName) localStorage.setItem('companyName', data.user.companyName)
-          if (data.user.companyAddress) localStorage.setItem('companyAddress', data.user.companyAddress)
-          if (data.user.city) localStorage.setItem('city', data.user.city)
-          if (data.user.state) localStorage.setItem('state', data.user.state)
-          if (data.user.pincode) localStorage.setItem('pincode', data.user.pincode)
-
-          // Director Details
-          if (data.user.directorName) localStorage.setItem('directorName', data.user.directorName)
-          if (data.user.panNumber) localStorage.setItem('panNumber', data.user.panNumber)
-          if (data.user.panCardImage) localStorage.setItem('panCardImage', data.user.panCardImage)
-          if (data.user.aadharNumber) localStorage.setItem('aadharNumber', data.user.aadharNumber)
-          if (data.user.designation) localStorage.setItem('designation', data.user.designation)
-          if (data.user.directorAddress) localStorage.setItem('directorAddress', data.user.directorAddress)
-          if (data.user.directorPhoto) localStorage.setItem('directorPhoto', data.user.directorPhoto)
-          if (data.user.directorSignature) localStorage.setItem('directorSignature', data.user.directorSignature)
-        }
-        
+        localStorage.setItem('brandToken', data.token)
+        localStorage.setItem('brandUser', JSON.stringify(data.user))
         message.success('Password set up successfully!')
         onSetupComplete()
       } else {
@@ -86,51 +82,34 @@ const FirstTimeSetup = ({ email, onSetupComplete }: FirstTimeSetupProps) => {
     }
   }
 
+  const PasswordRequirementItem = ({ requirement, password }: { requirement: PasswordRequirement; password: string }) => {
+    const isMet = requirement.validator(password)
+    return (
+      <div className="flex items-center gap-2 mb-2">
+        {isMet ? (
+          <CheckCircleOutlined className="text-green-500 text-lg" />
+        ) : (
+          <CloseCircleOutlined className="text-red-500 text-lg" />
+        )}
+        <Text style={{ color: isMet ? '#22c55e' : '#ef4444' }}>
+          {requirement.text}
+        </Text>
+      </div>
+    )
+  }
+
   return (
-    <div style={{ width: '100%' }}>
-      <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-        <div style={{
-          width: '64px',
-          height: '64px',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          margin: '0 auto 16px',
-          color: 'white',
-          fontSize: '24px'
-        }}>
+    <div className="w-full">
+      <div className="text-center mb-8">
+        <div className="w-16 h-16 bg-gradient-to-r from-[#667eea] to-[#764ba2] rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl">
           <SafetyOutlined />
         </div>
-        <Title level={2} style={{ margin: 0, color: '#1f2937' }}>
+        <Title level={2} className="m-0 text-gray-800">
           Set Up Your Password
         </Title>
         <Text type="secondary">
           Welcome to VCQRU! Please create a secure password to continue.
         </Text>
-      </div>
-
-      <div style={{
-        marginBottom: '24px',
-        padding: '16px',
-        background: '#ebf5ff',
-        borderRadius: '8px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-          <InfoCircleOutlined style={{ color: '#1890ff', marginTop: '4px', marginRight: '8px' }} />
-          <div>
-            <Text style={{ fontSize: '14px', color: '#4b5563', display: 'block', marginBottom: '8px' }}>
-              Your password must meet the following requirements:
-            </Text>
-            <ul style={{ fontSize: '14px', color: '#4b5563', paddingLeft: '20px', margin: 0 }}>
-              <li>At least 8 characters long</li>
-              <li>Include at least one uppercase letter</li>
-              <li>Include at least one number</li>
-              <li>Include at least one special character</li>
-            </ul>
-          </div>
-        </div>
       </div>
 
       <Form
@@ -150,7 +129,7 @@ const FirstTimeSetup = ({ email, onSetupComplete }: FirstTimeSetupProps) => {
           <Input
             prefix={<UserOutlined />}
             placeholder="Email"
-            style={{ borderRadius: '8px' }}
+            className="rounded-lg"
             disabled
           />
         </Form.Item>
@@ -159,20 +138,31 @@ const FirstTimeSetup = ({ email, onSetupComplete }: FirstTimeSetupProps) => {
           name="password"
           rules={[
             { required: true, message: 'Please input your password!' },
-            { min: 8, message: 'Password must be at least 8 characters!' },
+            { min: 8, message: '' },
             {
               pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-              message: 'Password must include uppercase, lowercase, number and special character!'
+              message: ''
             }
           ]}
-          help="Password must be at least 8 characters and include uppercase, lowercase, number and special character"
         >
           <Input.Password
             prefix={<LockOutlined />}
             placeholder="New Password"
-            style={{ borderRadius: '8px' }}
+            className="rounded-lg"
+            onChange={(e) => setPassword(e.target.value)}
           />
         </Form.Item>
+
+        <div className="mb-6">
+          <Text strong className="block mb-2">Password Requirements:</Text>
+          {passwordRequirements.map((requirement, index) => (
+            <PasswordRequirementItem
+              key={index}
+              requirement={requirement}
+              password={password}
+            />
+          ))}
+        </div>
 
         <Form.Item
           name="confirmPassword"
@@ -191,27 +181,29 @@ const FirstTimeSetup = ({ email, onSetupComplete }: FirstTimeSetupProps) => {
           <Input.Password
             prefix={<LockOutlined />}
             placeholder="Confirm Password"
-            style={{ borderRadius: '8px' }}
+            className="rounded-lg"
           />
         </Form.Item>
 
-        <Form.Item style={{ marginBottom: '16px' }}>
+        <Form.Item className="mb-4">
           <Button
             type="primary"
             htmlType="submit"
+            className="w-full h-12 rounded-lg bg-gradient-to-r from-[#667eea] to-[#764ba2] border-none text-base font-medium"
             loading={loading}
-            icon={<SafetyOutlined />}
-            style={{
-              width: '100%',
-              height: '48px',
-              borderRadius: '8px',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              border: 'none',
-              fontSize: '16px',
-              fontWeight: '500'
-            }}
+            icon={<LoginOutlined />}
           >
-            {loading ? 'Setting Up...' : 'Set Password'}
+            {loading ? 'Setting up...' : 'Set Password'}
+          </Button>
+        </Form.Item>
+
+        <Form.Item>
+          <Button
+            type="link"
+            onClick={onBack}
+            className="w-full"
+          >
+            Back to Login
           </Button>
         </Form.Item>
       </Form>
