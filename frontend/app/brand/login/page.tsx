@@ -101,38 +101,10 @@ const BrandLoginPage = () => {
       const data = await response.json()
 
       if (response.ok) {
-        // Store the token and user info
-        localStorage.setItem('token', data.token)
-        localStorage.setItem('userData', JSON.stringify(data.user))
+        // Store the token and user info with correct keys
+        localStorage.setItem('brandToken', data.token)
+        localStorage.setItem('brandUser', JSON.stringify(data.user))
         message.success('Login successful!')
-        
-        // Store all profile data from onboarding
-        if (data.user) {
-          // Account Verification
-          if (data.user.email) localStorage.setItem('email', data.user.email)
-          if (data.user.mobileNumber) localStorage.setItem('mobileNumber', data.user.mobileNumber)
-
-          // E-KYC
-          if (data.user.gstNumber) localStorage.setItem('gstNumber', data.user.gstNumber)
-          if (data.user.gstCertificate) localStorage.setItem('gstCertificate', data.user.gstCertificate)
-
-          // Company Details
-          if (data.user.companyName) localStorage.setItem('companyName', data.user.companyName)
-          if (data.user.companyAddress) localStorage.setItem('companyAddress', data.user.companyAddress)
-          if (data.user.city) localStorage.setItem('city', data.user.city)
-          if (data.user.state) localStorage.setItem('state', data.user.state)
-          if (data.user.pincode) localStorage.setItem('pincode', data.user.pincode)
-
-          // Director Details
-          if (data.user.directorName) localStorage.setItem('directorName', data.user.directorName)
-          if (data.user.panNumber) localStorage.setItem('panNumber', data.user.panNumber)
-          if (data.user.panCardImage) localStorage.setItem('panCardImage', data.user.panCardImage)
-          if (data.user.aadharNumber) localStorage.setItem('aadharNumber', data.user.aadharNumber)
-          if (data.user.designation) localStorage.setItem('designation', data.user.designation)
-          if (data.user.directorAddress) localStorage.setItem('directorAddress', data.user.directorAddress)
-          if (data.user.directorPhoto) localStorage.setItem('directorPhoto', data.user.directorPhoto)
-          if (data.user.directorSignature) localStorage.setItem('directorSignature', data.user.directorSignature)
-        }
         
         // Redirect to brand dashboard
         router.push('/brand/dashboard')

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Card, Row, Col, Statistic, Typography, Layout, Menu } from 'antd'
+import { Card, Row, Col, Statistic, Typography, Layout, Menu, Alert } from 'antd'
 import { 
   ShopOutlined, 
   UserOutlined, 
@@ -16,39 +16,51 @@ const { Title } = Typography
 interface BrandUser {
   id: number
   email: string
-  companyName: string
+  companyName: string | null
   companyDetails: {
-    name: string
-    category: string
-    websiteUrl: string
-    country: string
-    state: string
-    city: string
-    address: string
+    name: string | null
+    category: string | null
+    websiteUrl: string | null
+    country: string | null
+    state: string | null
+    city: string | null
+    address: string | null
   }
   directorDetails: {
-    aadharNumber: string
-    panNumber: string
+    aadharNumber: string | null
+    panNumber: string | null
   }
   ekyc: {
-    gstNumber: string
+    gstNumber: string | null
   }
 }
 
 const BrandDashboard = () => {
   const [user, setUser] = useState<BrandUser | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
-    const userStr = localStorage.getItem('brandUser')
-    const token = localStorage.getItem('brandToken')
+    try {
+      const userStr = localStorage.getItem('brandUser')
+      const token = localStorage.getItem('brandToken')
 
-    if (!userStr || !token) {
-      router.push('/brand/login')
-      return
+      console.log('Debug - User data from localStorage:', userStr)
+      console.log('Debug - Token from localStorage:', token)
+
+      if (!userStr || !token) {
+        console.log('Debug - No user data or token found, redirecting to login')
+        router.push('/brand/login')
+        return
+      }
+
+      const userData = JSON.parse(userStr)
+      console.log('Debug - Parsed user data:', userData)
+      setUser(userData)
+    } catch (err) {
+      console.error('Debug - Error loading user data:', err)
+      setError('Failed to load user data. Please try logging in again.')
     }
-
-    setUser(JSON.parse(userStr))
   }, [router])
 
   const handleLogout = () => {
@@ -57,8 +69,39 @@ const BrandDashboard = () => {
     router.push('/brand/login')
   }
 
+  if (error) {
+    return (
+      <Layout style={{ minHeight: '100vh' }}>
+        <Content className="p-6">
+          <Alert
+            message="Error"
+            description={error}
+            type="error"
+            showIcon
+            action={
+              <button 
+                onClick={() => router.push('/brand/login')}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                Go to Login
+              </button>
+            }
+          />
+        </Content>
+      </Layout>
+    )
+  }
+
   if (!user) {
-    return null
+    return (
+      <Layout style={{ minHeight: '100vh' }}>
+        <Content className="p-6">
+          <div className="flex justify-center items-center h-full">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          </div>
+        </Content>
+      </Layout>
+    )
   }
 
   return (
@@ -68,7 +111,7 @@ const BrandDashboard = () => {
           <Title level={4} className="m-0">Brand Portal</Title>
         </div>
         <div className="flex items-center">
-          <span className="mr-4">Welcome, {user.companyDetails?.name}</span>
+          <span className="mr-4">Welcome, {user.email}</span>
           <LogoutOutlined 
             className="text-xl cursor-pointer" 
             onClick={handleLogout}
@@ -96,7 +139,7 @@ const BrandDashboard = () => {
         </Sider>
 
         <Content className="p-6">
-          <Title level={3}>Welcome to {user.companyDetails?.name}</Title>
+          <Title level={3}>Welcome to Brand Portal</Title>
           
           <Row gutter={16} className="mt-6">
             <Col span={8}>
@@ -131,16 +174,20 @@ const BrandDashboard = () => {
             <Title level={4}>Company Information</Title>
             <Row gutter={[16, 16]} className="mt-4">
               <Col span={12}>
-                <p><strong>Company Name:</strong> {user.companyDetails?.name}</p>
-                <p><strong>Category:</strong> {user.companyDetails?.category}</p>
-                <p><strong>Website:</strong> {user.companyDetails?.websiteUrl}</p>
-                <p><strong>Address:</strong> {user.companyDetails?.address}</p>
+                <p><strong>Company Name:</strong> {user.companyDetails?.name || 'Not provided'}</p>
+                <p><strong>Category:</strong> {user.companyDetails?.category || 'Not provided'}</p>
+                <p><strong>Website:</strong> {user.companyDetails?.websiteUrl || 'Not provided'}</p>
+                <p><strong>Address:</strong> {user.companyDetails?.address || 'Not provided'}</p>
               </Col>
               <Col span={12}>
                 <p><strong>Email:</strong> {user.email}</p>
-                <p><strong>PAN Number:</strong> {user.directorDetails?.panNumber}</p>
-                <p><strong>GST Number:</strong> {user.ekyc?.gstNumber}</p>
-                <p><strong>Location:</strong> {user.companyDetails?.city}, {user.companyDetails?.state}, {user.companyDetails?.country}</p>
+                <p><strong>PAN Number:</strong> {user.directorDetails?.panNumber || 'Not provided'}</p>
+                <p><strong>GST Number:</strong> {user.ekyc?.gstNumber || 'Not provided'}</p>
+                <p><strong>Location:</strong> {
+                  [user.companyDetails?.city, user.companyDetails?.state, user.companyDetails?.country]
+                    .filter(Boolean)
+                    .join(', ') || 'Not provided'
+                }</p>
               </Col>
             </Row>
           </Card>
