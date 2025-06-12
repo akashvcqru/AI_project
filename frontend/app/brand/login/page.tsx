@@ -32,17 +32,11 @@ const BrandLoginPage = () => {
         if (verifyResponse.status === 404) {
           message.error('This email is not registered. Please enter a registered email address or contact support for assistance.')
         } else if (verifyResponse.status === 400) {
-          message.warning('Your account is pending approval. Please wait for admin approval before proceeding.')
+          message.warning(verifyData.message || 'Your account is pending approval. Please wait for admin approval before proceeding.')
           return
         } else {
           message.error(verifyData.message || 'Email verification failed')
         }
-        return
-      }
-
-      // Check if user is approved
-      if (verifyData.user?.submissionStatus?.status !== 'Approved') {
-        message.warning('Your account is pending approval. Please wait for admin approval before proceeding.')
         return
       }
 
@@ -52,10 +46,10 @@ const BrandLoginPage = () => {
 
       // For approved users
       if (verifyData.isFirstLogin) {
-        message.success('Email verified. Please set up your password.')
+        message.success(verifyData.message || 'Email verified. Please set up your password.')
         setShowPasswordSetup(true)
       } else {
-        message.success('Email verified. Please enter your password.')
+        message.success(verifyData.message || 'Email verified. Please enter your password.')
         setShowPasswordInput(true)
       }
     } catch (error) {

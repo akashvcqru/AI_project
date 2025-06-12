@@ -34,7 +34,7 @@ namespace UserOnboarding.API.Controllers
         }
 
         [HttpPost("verify-email")]
-        public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request)
+        public async Task<IActionResult> VerifyEmail([FromBody] EmailVerificationRequest request)
         {
             try
             {
@@ -63,12 +63,14 @@ namespace UserOnboarding.API.Controllers
                     });
                 }
 
-                // Check if this is first time login
-                var isFirstTimeLogin = string.IsNullOrEmpty(user.PasswordHash);
+                // Check if this is first time login by checking if password is set
+                var isFirstLogin = string.IsNullOrEmpty(user.PasswordHash);
 
                 return Ok(new
                 {
-                    isFirstTimeLogin,
+                    isFirstLogin,
+                    email = user.Email,
+                    message = isFirstLogin ? "Email verified. Please set up your password." : "Email verified. Please enter your password.",
                     user = new
                     {
                         id = user.Id,

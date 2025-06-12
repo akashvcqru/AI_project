@@ -285,6 +285,31 @@ namespace UserOnboarding.API.Controllers
 
                 entry.Status = "Approved";
                 entry.UpdatedAt = DateTime.UtcNow;
+
+                // Update the corresponding user's SubmissionStatus
+                var user = await _context.Users
+                    .Include(u => u.SubmissionStatus)
+                    .FirstOrDefaultAsync(u => u.Email == entry.Email);
+
+                if (user != null)
+                {
+                    if (user.SubmissionStatus == null)
+                    {
+                        user.SubmissionStatus = new SubmissionStatus
+                        {
+                            Status = "Approved",
+                            SubmittedAt = DateTime.UtcNow,
+                            ReviewedBy = User.Identity?.Name,
+                            ReviewedAt = DateTime.UtcNow
+                        };
+                    }
+                    else
+                    {
+                        user.SubmissionStatus.Status = "Approved";
+                        user.SubmissionStatus.ReviewedBy = User.Identity?.Name;
+                        user.SubmissionStatus.ReviewedAt = DateTime.UtcNow;
+                    }
+                }
                 
                 await _context.SaveChangesAsync();
 
