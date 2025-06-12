@@ -27,12 +27,28 @@ const BrandLoginPage = () => {
       })
 
       const verifyData = await verifyResponse.json()
+      console.log('Email verification response:', verifyData)
 
       if (!verifyResponse.ok) {
         if (verifyResponse.status === 404) {
           message.error('This email is not registered. Please enter a registered email address or contact support for assistance.')
         } else if (verifyResponse.status === 400) {
-          message.warning(verifyData.message || 'Your account is pending approval. Please wait for admin approval before proceeding.')
+          // Handle different status cases
+          console.log('Handling 400 response with verifiedStatus:', verifyData.verifiedStatus)
+          switch (verifyData.verifiedStatus) {
+            case 'Pending':
+              message.warning(verifyData.message)
+              break
+            case 'Rejected':
+              message.error(verifyData.message)
+              break
+            case 'NotSet':
+            case 'Invalid':
+              message.error(verifyData.message)
+              break
+            default:
+              message.error(verifyData.message || 'An error occurred during verification')
+          }
           return
         } else {
           message.error(verifyData.message || 'Email verification failed')
@@ -40,20 +56,28 @@ const BrandLoginPage = () => {
         return
       }
 
-      // Store user data in localStorage
-      localStorage.setItem('userData', JSON.stringify(verifyData.user))
-      setEmail(values.email)
+      // For successful response (approved users)
+      console.log('Handling successful response with verifiedStatus:', verifyData.verifiedStatus)
+      if (verifyData.verifiedStatus === 'Approved') {
+        console.log('User is approved, isFirstLogin:', verifyData.isFirstLogin)
+        // Store user data in localStorage
+        localStorage.setItem('userData', JSON.stringify(verifyData.user))
+        setEmail(values.email)
 
-      // For approved users
-      if (verifyData.isFirstLogin) {
-        message.success(verifyData.message || 'Email verified. Please set up your password.')
-        setShowPasswordSetup(true)
+        // Handle first login vs returning user
+        if (verifyData.isFirstLogin) {
+          message.success(verifyData.message || 'Email verified. Please set up your password.')
+          setShowPasswordSetup(true)
+        } else {
+          message.success(verifyData.message || 'Email verified. Please enter your password.')
+          setShowPasswordInput(true)
+        }
       } else {
-        message.success(verifyData.message || 'Email verified. Please enter your password.')
-        setShowPasswordInput(true)
+        console.log('User is not approved, verifiedStatus:', verifyData.verifiedStatus)
+        message.error('Your account is not approved. Please contact support for assistance.')
       }
     } catch (error) {
-      console.error('Error:', error)
+      console.error('Error during email verification:', error)
       message.error('An error occurred during email verification')
     } finally {
       setLoading(false)

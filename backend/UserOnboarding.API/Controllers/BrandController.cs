@@ -38,70 +38,87 @@ namespace UserOnboarding.API.Controllers
         {
             try
             {
+                _logger.LogInformation("Verifying email: {Email}", request.Email);
+
+                // First check if user exists
                 var user = await _context.Users
-                    .Include(u => u.CompanyDetails)
-                    .Include(u => u.DirectorDetails)
-                    .Include(u => u.EKYC)
-                    .Include(u => u.SubmissionStatus)
                     .FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower());
 
                 if (user == null)
                 {
-                    _logger.LogWarning("Login attempt with unregistered email: {Email}", request.Email);
+                    _logger.LogWarning("User not found for email: {Email}", request.Email);
                     return NotFound(new { 
-                        message = "This email is not registered. Please enter a registered email address or contact support for assistance."
+                        message = "This email is not registered. Please enter a registered email address or contact support for assistance.",
+                        verifiedStatus = "NotRegistered"
                     });
                 }
 
-                // Check if user is approved
-                if (user.SubmissionStatus?.Status != "Approved")
+                // Check OnboardingEntries table for user status
+                var onboardingEntry = await _context.OnboardingEntries
+                    .FirstOrDefaultAsync(o => o.Email.ToLower() == request.Email.ToLower());
+
+                if (onboardingEntry == null)
                 {
-                    _logger.LogWarning("Unapproved user attempting to login: {Email}", request.Email);
+                    _logger.LogWarning("No onboarding entry found for email: {Email}", request.Email);
                     return BadRequest(new { 
-                        message = "Your account is pending approval. Please wait for admin approval before setting up your password.",
-                        status = user.SubmissionStatus?.Status
+                        message = "Your account is not properly set up. Please contact support for assistance.",
+                        verifiedStatus = "NotSet"
                     });
                 }
 
-                // Check if this is first time login by checking if password is set
-                var isFirstLogin = string.IsNullOrEmpty(user.PasswordHash);
-
-                return Ok(new
+                // Check status from OnboardingEntries
+                switch (onboardingEntry.Status.ToLower())
                 {
-                    isFirstLogin,
-                    email = user.Email,
-                    message = isFirstLogin ? "Email verified. Please set up your password." : "Email verified. Please enter your password.",
-                    user = new
-                    {
-                        id = user.Id,
-                        email = user.Email,
-                        companyName = user.CompanyDetails?.Name,
-                        companyDetails = new
+                    case "pending":
+                        _logger.LogInformation("User {Email} is pending approval", request.Email);
+                        return BadRequest(new { 
+                            message = "Your account is pending approval. Please wait for admin approval before proceeding.",
+                            verifiedStatus = "Pending"
+                        });
+
+                    case "rejected":
+                        _logger.LogInformation("User {Email} is rejected", request.Email);
+                        return BadRequest(new { 
+                            message = "Your account has been rejected. Please contact support for assistance.",
+                            verifiedStatus = "Rejected"
+                        });
+
+                    case "approved":
+                        _logger.LogInformation("User {Email} is approved", request.Email);
+                        // Check if this is first time login by checking if password is set
+                        bool isFirstLogin = string.IsNullOrEmpty(user.PasswordHash);
+                        _logger.LogInformation("User {Email} first login status: {IsFirstLogin}", request.Email, isFirstLogin);
+
+                        return Ok(new
                         {
-                            name = user.CompanyDetails?.Name,
-                            category = user.CompanyDetails?.Category,
-                            websiteUrl = user.CompanyDetails?.WebsiteUrl,
-                            country = user.CompanyDetails?.Country,
-                            state = user.CompanyDetails?.State,
-                            city = user.CompanyDetails?.City,
-                            address = user.CompanyDetails?.Address
-                        },
-                        directorDetails = new
-                        {
-                            aadharNumber = user.DirectorDetails?.AadharNumber,
-                            panNumber = user.DirectorDetails?.PANNumber
-                        },
-                        ekyc = new
-                        {
-                            gstNumber = user.EKYC?.GSTNumber
-                        }
-                    }
-                });
+                            isFirstLogin = isFirstLogin,
+                            email = user.Email,
+                            message = isFirstLogin ? "Email verified. Please set up your password." : "Email verified. Please enter your password.",
+                            verifiedStatus = "Approved",
+                            user = new
+                            {
+                                id = user.Id,
+                                email = user.Email,
+                                companyName = user.CompanyDetails?.Name,
+                                isApproved = true
+                            }
+                        });
+
+                    default:
+                        _logger.LogWarning("Invalid status for user {Email}: {Status}", request.Email, onboardingEntry.Status);
+                        return BadRequest(new { 
+                            message = "Your account has an invalid status. Please contact support for assistance.",
+                            verifiedStatus = "Invalid"
+                        });
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during email verification");
-                return StatusCode(500, new { message = "An error occurred during email verification" });
+                _logger.LogError(ex, "Error verifying email: {Email}", request.Email);
+                return StatusCode(500, new { 
+                    message = "An error occurred while verifying your email. Please try again later.",
+                    verifiedStatus = "Error"
+                });
             }
         }
 

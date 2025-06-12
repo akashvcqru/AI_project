@@ -8,7 +8,7 @@ using UserOnboarding.API.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure URLs
-builder.WebHost.UseUrls("http://localhost:5000");
+builder.WebHost.UseUrls("http://localhost:5000", "https://localhost:5001");
 
 // Add services to the container.
 builder.Services.AddControllers()
@@ -17,6 +17,12 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
     });
+
+// Configure logging
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+builder.Logging.SetMinimumLevel(LogLevel.Information);
 
 // Configure DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -59,9 +65,23 @@ builder.Services.AddCors(options =>
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "User Onboarding API",
+        Version = "v1",
+        Description = "API for User Onboarding System"
+    });
+});
 
 var app = builder.Build();
+
+// Log startup information
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
+logger.LogInformation("Application starting...");
+logger.LogInformation("Environment: {Environment}", app.Environment.EnvironmentName);
+logger.LogInformation("URLs: {Urls}", string.Join(", ", builder.WebHost.GetSetting(WebHostDefaults.ServerUrlsKey)));
 
 // Initialize the database
 using (var scope = app.Services.CreateScope())
@@ -74,17 +94,17 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
     {
-        var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "An error occurred while initializing the database.");
     }
 }
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "User Onboarding API V1");
+    c.RoutePrefix = "swagger";
+});
 
 // Use CORS before other middleware
 app.UseCors("AllowFrontend");
