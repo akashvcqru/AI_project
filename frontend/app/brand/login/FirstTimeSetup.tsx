@@ -49,6 +49,11 @@ const FirstTimeSetup = ({ email, onSetupComplete, onBack }: FirstTimeSetupProps)
   const onSetupPassword = async (values: SetupPasswordForm) => {
     setLoading(true)
     try {
+      console.log('Sending setup password request:', {
+        email: values.email,
+        password: values.password,
+      })
+
       const response = await fetch('http://localhost:5000/api/brand/setup-password', {
         method: 'POST',
         headers: {
@@ -61,6 +66,10 @@ const FirstTimeSetup = ({ email, onSetupComplete, onBack }: FirstTimeSetupProps)
       })
 
       const data = await response.json()
+      console.log('Setup password response:', {
+        status: response.status,
+        data,
+      })
 
       if (response.ok) {
         localStorage.setItem('brandToken', data.token)
@@ -69,13 +78,21 @@ const FirstTimeSetup = ({ email, onSetupComplete, onBack }: FirstTimeSetupProps)
         onSetupComplete()
       } else {
         if (response.status === 400) {
-          message.warning('Your account is pending approval.')
+          if (data.verifiedStatus === 'Pending') {
+            message.warning('Your account is pending approval. Please wait for admin approval before setting up your password.')
+          } else if (data.verifiedStatus === 'Rejected') {
+            message.error('Your account has been rejected. Please contact support for assistance.')
+          } else if (data.verifiedStatus === 'NotSet') {
+            message.error('Your account status is not set. Please contact support for assistance.')
+          } else {
+            message.error(data.message || 'Error setting up password')
+          }
         } else {
           message.error(data.message || 'Error setting up password')
         }
       }
     } catch (error) {
-      console.error('Error:', error)
+      console.error('Error during password setup:', error)
       message.error('Error during password setup')
     } finally {
       setLoading(false)
