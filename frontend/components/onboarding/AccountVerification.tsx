@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { Form, Input, Button, message, Alert } from 'antd'
-import { useVerifyEmailMutation, useVerifyOtpMutation } from '@/store/services/onboardingApi'
 import { useAppDispatch } from '@/store/hooks'
 import { useOnboarding } from '../../contexts/OnboardingContext'
 import SubmissionSuccess from './SubmissionSuccess'
+
+// Add API base URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
 
 interface AccountVerificationProps {
   onNext: () => void
@@ -15,8 +17,8 @@ interface AccountVerificationProps {
 
 const AccountVerification = ({ onNext, onPrev, onAlreadySubmitted }: AccountVerificationProps) => {
   const [form] = Form.useForm()
-  const [verifyEmail, { isLoading: isEmailLoading }] = useVerifyEmailMutation()
-  const [verifyOtp, { isLoading: isOtpLoading }] = useVerifyOtpMutation()
+  const [isEmailLoading, setIsEmailLoading] = useState(false)
+  const [isOtpLoading, setIsOtpLoading] = useState(false)
   const [isOtpSent, setIsOtpSent] = useState(false)
   const [isEmailVerified, setIsEmailVerified] = useState(false)
   const [countdown, setCountdown] = useState(0)
@@ -60,7 +62,7 @@ const AccountVerification = ({ onNext, onPrev, onAlreadySubmitted }: AccountVeri
 
   const checkUserProgress = async (email: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/User/check-progress/${encodeURIComponent(email)}`)
+      const response = await fetch(`${API_BASE_URL}/api/User/check-progress/${encodeURIComponent(email)}`)
       const data = await response.json()
       
       if (data.isSubmitted) {
@@ -130,101 +132,140 @@ const AccountVerification = ({ onNext, onPrev, onAlreadySubmitted }: AccountVeri
         return // Don't send OTP if user is already submitted or being redirected
       }
       
-      const response = await verifyEmail({ email: values.email }).unwrap()
-      // The backend returns { message: "OTP sent successfully" }
-      if (response.message === "OTP sent successfully") {
-        setIsOtpSent(true)
-        startCountdown()
-        message.success('OTP sent successfully to your email')
-      } else {
-        message.error(response.message || 'Failed to send OTP')
+      setIsEmailLoading(true)
+      const response = await fetch(`${API_BASE_URL}/api/Account/verify-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        credentials: 'include', // Include cookies if needed
+        body: JSON.stringify({ email: values.email }),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
       }
+      
+      const data = await response.json()
+      setIsOtpSent(true)
+      startCountdown()
+      message.success('OTP sent successfully to your email')
+      
     } catch (error: any) {
       console.error('Email verification error:', error)
-      message.error(error?.data?.message || 'Failed to send OTP')
+      message.error(error.message || 'Failed to send OTP. Please try again.')
+    } finally {
+      setIsEmailLoading(false)
     }
   }
 
   const handleResendOtp = async () => {
     try {
       const values = await form.validateFields(['email'])
-      const response = await verifyEmail({ email: values.email }).unwrap()
-      if (response.success) {
-        startCountdown()
-        message.success('OTP resent successfully to your email')
-      } else {
-        message.error(response.message || 'Failed to resend OTP')
+      setIsEmailLoading(true)
+      
+      const response = await fetch(`${API_BASE_URL}/api/Account/verify-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        credentials: 'include', // Include cookies if needed
+        body: JSON.stringify({ email: values.email }),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
       }
+      
+      const data = await response.json()
+      startCountdown()
+      message.success('OTP resent successfully to your email')
+      
     } catch (error: any) {
       console.error('Resend OTP error:', error)
-      message.error(error?.data?.message || 'Failed to resend OTP')
+      message.error(error.message || 'Failed to resend OTP. Please try again.')
+    } finally {
+      setIsEmailLoading(false)
     }
   }
 
   const handleOtpVerification = async () => {
     try {
       const values = await form.validateFields(['email', 'otp'])
-      const response = await verifyOtp({ 
-        email: values.email,
-        otp: values.otp 
-      }).unwrap()
+      setIsOtpLoading(true)
       
-      // The backend returns { message, isSubmitted, currentStep, userData }
-      if (response.message === "Email verified successfully") {
-        setIsEmailVerified(true)
-        setIsNewVerification(true)
-        setCountdown(0)
-        setCanResend(true)
-        message.success('Email verified successfully')
-        
-        // Update form data
-        updateFormData('isEmailVerified', true)
-        
-        // If user has already submitted, show submission success
-        if (response.isSubmitted) {
-          setIsAlreadySubmitted(true)
-          setSubmissionMessage(response.submissionMessage)
-          if (onAlreadySubmitted) {
-            onAlreadySubmitted()
-          } else {
-            window.dispatchEvent(new Event('showSubmissionSuccess'))
-          }
-          return
-        }
-        
-        // Update user data if available
-        if (response.userData) {
-          const updates: any = {}
-          if (response.userData.email) updates.email = response.userData.email
-          if (response.userData.isEmailVerified) updates.isEmailVerified = response.userData.isEmailVerified
-          if (response.userData.panNumber) updates.panNumber = response.userData.panNumber
-          if (response.userData.gstNumber) updates.gstNumber = response.userData.gstNumber
-          if (response.userData.companyName) updates.companyName = response.userData.companyName
-          if (response.userData.companyAddress) updates.address = response.userData.companyAddress
-          if (response.userData.companyCity) updates.city = response.userData.companyCity
-          if (response.userData.companyState) updates.state = response.userData.companyState
-          if (response.userData.aadharNumber) updates.aadharNumber = response.userData.aadharNumber
-          
-          updateMultipleFields(updates)
-        }
-        
-        // Navigate to the appropriate step if not already submitted
-        if (response.currentStep > 0) {
-          setTimeout(() => {
-            goToStep(response.currentStep)
-          }, 1000)
-        }
-        
-        // Save progress
-        setTimeout(() => {
-          saveProgress()
-        }, 100)
-      } else {
-        message.error(response.message || 'Invalid OTP')
+      const response = await fetch(`${API_BASE_URL}/api/Account/verify-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ 
+          email: values.email,
+          otp: values.otp 
+        }),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
       }
+      
+      const data = await response.json()
+      setIsEmailVerified(true)
+      setIsNewVerification(true)
+      setCountdown(0)
+      setCanResend(true)
+      message.success('Email verified successfully')
+      
+      // Update form data
+      updateFormData('isEmailVerified', true)
+      
+      // If user has already submitted, show submission success
+      if (data.isSubmitted) {
+        setIsAlreadySubmitted(true)
+        setSubmissionMessage(data.submissionMessage || 'Your application has already been submitted')
+        if (onAlreadySubmitted) {
+          onAlreadySubmitted()
+        } else {
+          window.dispatchEvent(new Event('showSubmissionSuccess'))
+        }
+        return
+      }
+      
+      // Update user data if available
+      if (data.userData) {
+        const updates: any = {}
+        if (data.userData.email) updates.email = data.userData.email
+        if (data.userData.isEmailVerified) updates.isEmailVerified = data.userData.isEmailVerified
+        if (data.userData.mobileNumber) updates.mobileNumber = data.userData.mobileNumber
+        if (data.userData.panNumber) updates.panNumber = data.userData.panNumber
+        if (data.userData.gstNumber) updates.gstNumber = data.userData.gstNumber
+        if (data.userData.companyName) updates.companyName = data.userData.companyName
+        if (data.userData.companyAddress) updates.address = data.userData.companyAddress
+        if (data.userData.companyCity) updates.city = data.userData.companyCity
+        if (data.userData.companyState) updates.state = data.userData.companyState
+        if (data.userData.aadharNumber) updates.aadharNumber = data.userData.aadharNumber
+        
+        updateMultipleFields(updates)
+      }
+      
+      // Remove automatic navigation to next step
+      // Only save progress
+      setTimeout(() => {
+        saveProgress()
+      }, 100)
+      
     } catch (error: any) {
       console.error('OTP verification error:', error)
-      message.error(error?.data?.message || 'Invalid OTP. Please try again.')
+      message.error(error.message || 'Invalid OTP. Please try again.')
+    } finally {
+      setIsOtpLoading(false)
     }
   }
 
@@ -234,15 +275,25 @@ const AccountVerification = ({ onNext, onPrev, onAlreadySubmitted }: AccountVeri
         message.error('Please verify your email first')
         return
       }
+
+      if (!values.mobileNumber) {
+        message.error('Please enter your mobile number')
+        return
+      }
       
       // Update both email and mobile number
       updateFormData('email', values.email)
       updateFormData('mobileNumber', values.mobileNumber)
       updateFormData('isEmailVerified', true)
       
+      // Save progress before moving to next step
+      await saveProgress()
+
+      // Now proceed to next step
       onNext()
     } catch (error) {
-      message.error('Verification failed. Please try again.')
+      console.error('Submit error:', error)
+      message.error('Failed to proceed. Please try again.')
     }
   }
 
@@ -356,8 +407,12 @@ const AccountVerification = ({ onNext, onPrev, onAlreadySubmitted }: AccountVeri
         </Form.Item>
 
         <div className="flex justify-end gap-4">
-          <Button type="primary" htmlType="submit" disabled={!isEmailVerified}>
-            Continue
+          <Button 
+            type="primary" 
+            htmlType="submit" 
+            disabled={!isEmailVerified}
+          >
+            Submit & Continue
           </Button>
         </div>
       </Form>

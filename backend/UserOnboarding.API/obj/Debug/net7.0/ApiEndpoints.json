@@ -33,6 +33,38 @@
   },
   {
     "ContainingType": "UserOnboarding.API.Controllers.AdminController",
+    "Method": "ApproveEntry",
+    "RelativePath": "api/Admin/approve/{id}",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserOnboarding.API.Controllers.AdminController",
+    "Method": "ChangePassword",
+    "RelativePath": "api/Admin/change-password",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "UserOnboarding.API.Controllers.ChangePasswordRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserOnboarding.API.Controllers.AdminController",
     "Method": "GetDashboardStats",
     "RelativePath": "api/Admin/dashboard",
     "HttpMethod": "GET",
@@ -55,6 +87,47 @@
         "IsRequired": true
       }
     ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserOnboarding.API.Controllers.AdminController",
+    "Method": "GetOnboardingEntries",
+    "RelativePath": "api/Admin/onboarding-entries",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserOnboarding.API.Controllers.AdminController",
+    "Method": "RejectEntry",
+    "RelativePath": "api/Admin/reject/{id}",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "UserOnboarding.API.Controllers.RejectRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserOnboarding.API.Controllers.AdminController",
+    "Method": "GetStats",
+    "RelativePath": "api/Admin/stats",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
     "ReturnTypes": []
   },
   {
@@ -107,6 +180,86 @@
     "IsController": true,
     "Order": 0,
     "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserOnboarding.API.Controllers.PanVerificationController",
+    "Method": "ValidatePan",
+    "RelativePath": "api/PanVerification/validate/{panNumber}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "panNumber",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserOnboarding.API.Controllers.PanVerificationController",
+    "Method": "VerifyPan",
+    "RelativePath": "api/PanVerification/verify",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "UserOnboarding.API.Services.PanVerificationRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserOnboarding.API.Controllers.UploadController",
+    "Method": "Upload",
+    "RelativePath": "api/Upload",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "file",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserOnboarding.API.Controllers.UploadController",
+    "Method": "GetFile",
+    "RelativePath": "api/Upload/files/{fileName}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "fileName",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserOnboarding.API.Controllers.UserController",
+    "Method": "CheckUserProgress",
+    "RelativePath": "api/User/check-progress/{email}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "email",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
     "ReturnTypes": []
   },
   {
@@ -167,7 +320,7 @@
     "Parameters": [
       {
         "Name": "request",
-        "Type": "UserOnboarding.API.Controllers.SubmitRequest",
+        "Type": "UserOnboarding.API.Controllers.ComprehensiveSubmitRequest",
         "IsRequired": true
       }
     ],

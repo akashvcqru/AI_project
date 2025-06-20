@@ -62,10 +62,10 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
       })
 
       const data: PANVerificationResponse = await response.json()
-      
+
       if (data.success && data.result) {
         const { pan_status, user_full_name, name_match_score } = data.result
-        
+
         if (pan_status === 'VALID' && parseFloat(name_match_score) >= 80) {
           setIsPanVerified(true)
           updateFormData('isPanVerified', true)
@@ -109,10 +109,10 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
       Object.entries(updates).forEach(([key, value]) => {
         updateFormData(key as keyof typeof formData, value)
       })
-      
+
       // Save progress
       saveProgress()
-      
+
       message.success('Director details submitted successfully!')
       onNext()
     } catch (error) {
@@ -128,7 +128,7 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
 
     try {
       const token = localStorage.getItem('token')
-      
+
       const response = await fetch('http://localhost:5000/api/upload', {
         method: 'POST',
         body: formData,
@@ -253,8 +253,8 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
         ) : undefined}
         validateStatus={isPanVerified === true ? "success" : isPanVerified === false ? "error" : undefined}
       >
-        <Input 
-          placeholder="Enter your full name" 
+        <Input
+          placeholder="Enter your full name"
           value={formData.name}
           onChange={(e) => {
             const value = e.target.value
@@ -288,8 +288,8 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
         ) : undefined}
         validateStatus={isPanVerified === true ? "success" : isPanVerified === false ? "error" : undefined}
       >
-        <Input 
-          placeholder="Enter your PAN number" 
+        <Input
+          placeholder="Enter your PAN number"
           maxLength={10}
           value={formData.panNumber}
           onChange={(e) => {
@@ -314,7 +314,7 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
       {isPanVerified === false && (
         <Form.Item
           name="panDocument"
-          label="PAN Card"
+          label="PAN Card Image"
           rules={[{ required: true, message: 'Please upload your PAN card!' }]}
           extra="Required when PAN verification fails. Supported formats: JPG, PNG, PDF (Max size: 2MB)"
         >
@@ -332,9 +332,9 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
           { pattern: /^[0-9]{12}$/, message: 'Please enter a valid 12-digit Aadhar number' }
         ]}
       >
-        <Input 
-          placeholder="Enter your Aadhar number" 
-          maxLength={12} 
+        <Input
+          placeholder="Enter your Aadhar number"
+          maxLength={12}
           value={formData.aadharNumber}
           onChange={(e) => {
             const value = e.target.value.replace(/\D/g, '')
@@ -349,8 +349,8 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
         label="Designation"
         rules={[{ required: true, message: 'Please input designation!' }]}
       >
-        <Input 
-          placeholder="Enter designation" 
+        <Input
+          placeholder="Enter designation"
           value={formData.designation}
           onChange={(e) => {
             updateFormData('designation', e.target.value)
@@ -361,12 +361,12 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
 
       <Form.Item
         name="directorAddress"
-        label="Residential Address"
-        rules={[{ required: true, message: 'Please input residential address!' }]}
+        label="Director Address"
+        rules={[{ required: true, message: 'Please input director address!' }]}
       >
-        <Input.TextArea 
-          rows={4} 
-          placeholder="Enter residential address" 
+        <Input.TextArea
+          rows={4}
+          placeholder="Enter residential address"
           value={formData.directorAddress || ''}
           onChange={(e) => {
             const value = e.target.value
@@ -378,8 +378,8 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
 
       <Form.Item
         name="photo"
-        label="Photo"
-        rules={[{ required: true, message: 'Please upload photo!' }]}
+        label="Director Photo"
+        rules={[{ required: true, message: 'Please upload director photo!' }]}
         extra="Supported formats: JPG, PNG (Max size: 2MB)"
       >
         <Upload {...photoUploadProps}>
@@ -389,8 +389,8 @@ const DirectorDetailsForm = ({ onNext, onPrev }: DirectorDetailsFormProps) => {
 
       <Form.Item
         name="signature"
-        label="Signature"
-        rules={[{ required: true, message: 'Please upload signature!' }]}
+        label="Director Signature"
+        rules={[{ required: true, message: 'Please upload director signature!' }]}
         extra="Supported formats: JPG, PNG (Max size: 2MB)"
       >
         <Upload {...signatureUploadProps}>

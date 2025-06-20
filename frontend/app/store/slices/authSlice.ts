@@ -1,17 +1,15 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
-interface User {
-  id: string
-  name: string
-  email: string
-  role: string
+interface AdminUser {
+  email: string;
+  isSuperAdmin: boolean;
 }
 
 interface AuthState {
-  user: User | null
-  token: string | null
-  isAuthenticated: boolean
-  isLoading: boolean
+  user: AdminUser | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 const initialState: AuthState = {
@@ -27,11 +25,10 @@ const authSlice = createSlice({
   reducers: {
     setCredentials: (
       state,
-      action: PayloadAction<{ user: User; token: string }>
+      action: PayloadAction<{ user: AdminUser; token: string }>
     ) => {
-      const { user, token } = action.payload
-      state.user = user
-      state.token = token
+      state.user = action.payload.user
+      state.token = action.payload.token
       state.isAuthenticated = true
       state.isLoading = false
     },

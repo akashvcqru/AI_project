@@ -174,6 +174,27 @@ namespace UserOnboarding.API.Controllers
                     user.SubmissionStatus.SubmittedAt = DateTime.UtcNow;
                 }
 
+                // Create entry in OnboardingEntries table
+                var onboardingEntry = new OnboardingEntry
+                {
+                    Email = request.Email,
+                    CompanyName = request.CompanyName,
+                    DirectorName = request.DirectorName,
+                    PanNumber = request.PanNumber,
+                    GstNumber = request.GstNumber,
+                    AadharNumber = request.AadharNumber,
+                    CompanyAddress = request.Address,
+                    City = request.City,
+                    State = request.State,
+                    Pincode = request.Pincode,
+                    DirectorDesignation = request.Designation,
+                    DirectorAddress = request.DirectorAddress,
+                    Status = "Pending",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                _context.OnboardingEntries.Add(onboardingEntry);
                 await _context.SaveChangesAsync();
                 
                 return Ok(new { message = "Onboarding submitted successfully" });

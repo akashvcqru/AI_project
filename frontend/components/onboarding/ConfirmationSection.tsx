@@ -56,7 +56,7 @@ const ConfirmationSection = ({ onNext, onPrev }: ConfirmationProps) => {
       console.log('Final submission data:', submissionData)
 
       const token = localStorage.getItem('token')
-      const response = await fetch('https://localhost:7001/api/User/submit', {
+      const response = await fetch('http://localhost:5000/api/User/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

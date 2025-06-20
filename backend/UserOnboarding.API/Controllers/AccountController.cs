@@ -15,32 +15,40 @@ namespace UserOnboarding.API.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<AccountController> _logger;
 
         public AccountController(
             ApplicationDbContext context,
             IEmailService emailService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            ILogger<AccountController> logger)
         {
             _context = context;
             _emailService = emailService;
             _configuration = configuration;
+            _logger = logger;
         }
 
         [HttpPost("verify-email")]
         public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request)
         {
+            _logger.LogInformation("Received email verification request for: {Email}", request.Email);
+
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("Invalid model state for email verification request");
                 return BadRequest(ModelState);
             }
 
             // Generate OTP
             var otp = GenerateOTP();
+            _logger.LogInformation("Generated OTP for {Email}: {OTP}", request.Email, otp);
 
             // Store OTP in database or cache
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
             if (user == null)
             {
+                _logger.LogInformation("Creating new user for {Email}", request.Email);
                 user = new User
                 {
                     Email = request.Email,
@@ -52,20 +60,33 @@ namespace UserOnboarding.API.Controllers
             }
             else
             {
+                _logger.LogInformation("Updating existing user {Email} with new OTP", request.Email);
                 user.OTP = otp;
                 user.OTPExpiry = DateTime.UtcNow.AddMinutes(5);
             }
 
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Successfully saved OTP to database for {Email}", request.Email);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save OTP to database for {Email}", request.Email);
+                return StatusCode(500, new { message = "Failed to save OTP", error = ex.Message });
+            }
 
             // Send OTP via email
             try
             {
+                _logger.LogInformation("Attempting to send OTP email to {Email}", request.Email);
                 await _emailService.SendOtpEmailAsync(request.Email, otp);
+                _logger.LogInformation("Successfully sent OTP email to {Email}", request.Email);
                 return Ok(new { message = "OTP sent successfully" });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to send OTP email to {Email}", request.Email);
                 return StatusCode(500, new { message = "Failed to send OTP", error = ex.Message });
             }
         }

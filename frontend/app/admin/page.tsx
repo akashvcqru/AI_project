@@ -1,36 +1,49 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Card, Row, Col, Statistic, Table, Tag, Space, Typography } from 'antd'
-import { 
-  TeamOutlined, 
-  CheckCircleOutlined, 
-  CloseCircleOutlined, 
-  ClockCircleOutlined 
+import { Card, Row, Col, Statistic, Table, Tag, Space, Typography, Skeleton } from 'antd'
+import type { ColumnsType } from 'antd/es/table'
+import {
+  TeamOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  ClockCircleOutlined
 } from '@ant-design/icons'
 import { useGetStatsQuery, useGetCompaniesQuery } from '@/app/store/services/adminApi'
 
 const { Title } = Typography
 
+interface CompanyEntry {
+  id: number
+  email: string
+  companyName: string
+  directorName: string
+  status: 'Pending' | 'Approved' | 'Rejected'
+  createdAt: string
+}
+
 export default function AdminDashboard() {
   const { data: stats, isLoading: statsLoading } = useGetStatsQuery()
   const { data: companies, isLoading: companiesLoading } = useGetCompaniesQuery()
 
-  const columns = [
+  const columns: ColumnsType<CompanyEntry> = [
     {
       title: 'Company Name',
       dataIndex: 'companyName',
       key: 'companyName',
+      sorter: (a, b) => a.companyName.localeCompare(b.companyName),
     },
     {
       title: 'Director Name',
       dataIndex: 'directorName',
       key: 'directorName',
+      sorter: (a, b) => a.directorName.localeCompare(b.directorName),
     },
     {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
+      sorter: (a, b) => a.email.localeCompare(b.email),
     },
     {
       title: 'Status',
@@ -61,112 +74,99 @@ export default function AdminDashboard() {
           </Tag>
         )
       },
+      sorter: (a, b) => a.status.localeCompare(b.status),
     },
     {
       title: 'Date',
       dataIndex: 'createdAt',
       key: 'createdAt',
       render: (date: string) => new Date(date).toLocaleDateString(),
+      sorter: (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     },
   ]
 
-  // Demo data for statistics
-  const demoStats = {
-    totalEntries: 150,
-    pendingEntries: 45,
-    approvedEntries: 85,
-    rejectedEntries: 20
-  }
+  const renderSkeletonCards = () => (
+    <Row gutter={[16, 16]} className="mb-6">
+      {[1, 2, 3, 4].map((item) => (
+        <Col xs={24} sm={12} lg={6} key={item}>
+          <Card>
+            <Skeleton active paragraph={{ rows: 1 }} />
+          </Card>
+        </Col>
+      ))}
+    </Row>
+  )
 
-  // Demo data for companies
-  const demoCompanies = [
-    {
-      id: 1,
-      companyName: 'Tech Solutions Inc',
-      directorName: 'John Doe',
-      email: 'john@techsolutions.com',
-      status: 'Approved',
-      createdAt: '2024-03-15T10:30:00Z'
-    },
-    {
-      id: 2,
-      companyName: 'Global Innovations',
-      directorName: 'Jane Smith',
-      email: 'jane@globalinnovations.com',
-      status: 'Pending',
-      createdAt: '2024-03-16T14:20:00Z'
-    },
-    {
-      id: 3,
-      companyName: 'Future Systems',
-      directorName: 'Mike Johnson',
-      email: 'mike@futuresystems.com',
-      status: 'Rejected',
-      createdAt: '2024-03-14T09:15:00Z'
-    }
-  ]
+  const renderSkeletonTable = () => (
+    <Card title="Recent Companies" className="mb-6">
+      <Skeleton active paragraph={{ rows: 5 }} />
+    </Card>
+  )
 
   return (
-    <div className="p-6">
+    <>
       <Title level={2}>Dashboard</Title>
       
       {/* Statistics Cards */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Total Companies"
-              value={demoStats.totalEntries}
-              prefix={<TeamOutlined />}
-              loading={statsLoading}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Pending Approvals"
-              value={demoStats.pendingEntries}
-              prefix={<ClockCircleOutlined />}
-              valueStyle={{ color: '#faad14' }}
-              loading={statsLoading}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Approved Companies"
-              value={demoStats.approvedEntries}
-              prefix={<CheckCircleOutlined />}
-              valueStyle={{ color: '#52c41a' }}
-              loading={statsLoading}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Rejected Companies"
-              value={demoStats.rejectedEntries}
-              prefix={<CloseCircleOutlined />}
-              valueStyle={{ color: '#ff4d4f' }}
-              loading={statsLoading}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {statsLoading ? (
+        renderSkeletonCards()
+      ) : (
+        <Row gutter={[16, 16]} className="mb-6">
+          <Col xs={24} sm={12} lg={6}>
+            <Card>
+              <Statistic
+                title="Total Companies"
+                value={stats?.totalEntries || 0}
+                prefix={<TeamOutlined />}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card>
+              <Statistic
+                title="Pending Approvals"
+                value={stats?.pendingEntries || 0}
+                prefix={<ClockCircleOutlined />}
+                valueStyle={{ color: '#faad14' }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card>
+              <Statistic
+                title="Approved Companies"
+                value={stats?.approvedEntries || 0}
+                prefix={<CheckCircleOutlined />}
+                valueStyle={{ color: '#52c41a' }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card>
+              <Statistic
+                title="Rejected Companies"
+                value={stats?.rejectedEntries || 0}
+                prefix={<CloseCircleOutlined />}
+                valueStyle={{ color: '#ff4d4f' }}
+              />
+            </Card>
+          </Col>
+        </Row>
+      )}
 
       {/* Recent Companies Table */}
-      <Card title="Recent Companies" className="mb-6">
-        <Table
-          columns={columns}
-          dataSource={demoCompanies}
-          loading={companiesLoading}
-          rowKey="id"
-          pagination={{ pageSize: 5 }}
-        />
-      </Card>
-    </div>
+      {companiesLoading ? (
+        renderSkeletonTable()
+      ) : (
+        <Card title="Recent Companies" className="mb-6">
+          <Table
+            columns={columns}
+            dataSource={companies}
+            rowKey="id"
+            pagination={false}
+          />
+        </Card>
+      )}
+    </>
   )
 } 

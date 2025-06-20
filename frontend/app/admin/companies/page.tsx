@@ -1,17 +1,38 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Table, Card, Tag, Space, Button, message, Modal, Input } from 'antd'
+import { Table, Card, Tag, Space, Button, message, Modal, Input, Popconfirm } from 'antd'
 import { CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 
 interface CompanyEntry {
   id: number
+  // Account Verification
   email: string
+  mobileNumber: string
+  
+  // E-KYC
+  gstNumber: string
+  gstRegistrationCertificate: string // URL or base64 of the certificate
+  
+  // Company Details
   companyName: string
+  tradeName: string
+  address: string
+  city: string
+  state: string
+  pincode: string
+  
+  // Director Details
   directorName: string
   panNumber: string
-  gstNumber: string
+  panCardImage: string // URL or base64 of the PAN card
+  aadharNumber: string
+  designation: string
+  directorAddress: string
+  directorPhoto: string // URL or base64 of the photo
+  directorSignature: string // URL or base64 of the signature
+  
   status: 'Pending' | 'Approved' | 'Rejected'
   createdAt: string
   updatedAt: string
@@ -31,7 +52,7 @@ const CompaniesPage = () => {
   const fetchEntries = async () => {
     setLoading(true)
     try {
-      const response = await fetch('https://localhost:7001/api/Admin/onboarding-entries')
+      const response = await fetch('http://localhost:5000/api/Admin/onboarding-entries')
       if (response.ok) {
         const data = await response.json()
         setEntries(data)
@@ -47,7 +68,7 @@ const CompaniesPage = () => {
 
   const handleApprove = async (id: number) => {
     try {
-      const response = await fetch(`https://localhost:7001/api/Admin/approve/${id}`, {
+      const response = await fetch(`http://localhost:5000/api/Admin/approve/${id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -55,7 +76,19 @@ const CompaniesPage = () => {
       })
 
       if (response.ok) {
-        message.success('Company approved successfully!')
+        // Send approval email
+        const emailResponse = await fetch(`http://localhost:5000/api/Admin/send-approval-email/${id}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+
+        if (emailResponse.ok) {
+          message.success('Company approved and notification email sent successfully!')
+        } else {
+          message.warning('Company approved but failed to send notification email')
+        }
         fetchEntries()
       } else {
         message.error('Failed to approve company')
@@ -72,7 +105,7 @@ const CompaniesPage = () => {
     }
 
     try {
-      const response = await fetch(`https://localhost:7001/api/Admin/reject/${selectedEntryId}`, {
+      const response = await fetch(`http://localhost:5000/api/Admin/reject/${selectedEntryId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -118,76 +151,221 @@ const CompaniesPage = () => {
       dataIndex: 'id',
       key: 'id',
       width: 60,
+      sorter: (a, b) => (a.id || 0) - (b.id || 0),
+      render: (id) => id || 'N/A'
     },
     {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
       width: 200,
+      sorter: (a, b) => (a.email || '').localeCompare(b.email || ''),
+      render: (email) => email || 'N/A'
+    },
+    {
+      title: 'Mobile',
+      dataIndex: 'mobileNumber',
+      key: 'mobileNumber',
+      width: 120,
+      sorter: (a, b) => (a.mobileNumber || '').localeCompare(b.mobileNumber || ''),
+      render: (mobile) => mobile || 'N/A'
     },
     {
       title: 'Company Name',
       dataIndex: 'companyName',
       key: 'companyName',
       width: 180,
+      sorter: (a, b) => (a.companyName || '').localeCompare(b.companyName || ''),
+      render: (name) => name || 'N/A'
     },
     {
-      title: 'Director Name',
-      dataIndex: 'directorName',
-      key: 'directorName',
-      width: 150,
-    },
-    {
-      title: 'PAN Number',
-      dataIndex: 'panNumber',
-      key: 'panNumber',
-      width: 120,
+      title: 'Trade Name',
+      dataIndex: 'tradeName',
+      key: 'tradeName',
+      width: 180,
+      sorter: (a, b) => (a.tradeName || '').localeCompare(b.tradeName || ''),
+      render: (name) => name || 'N/A'
     },
     {
       title: 'GST Number',
       dataIndex: 'gstNumber',
       key: 'gstNumber',
       width: 150,
+      sorter: (a, b) => (a.gstNumber || '').localeCompare(b.gstNumber || ''),
+      render: (gst) => gst || 'N/A'
+    },
+    {
+      title: 'Address',
+      dataIndex: 'address',
+      key: 'address',
+      width: 200,
+      ellipsis: true,
+      sorter: (a, b) => (a.address || '').localeCompare(b.address || ''),
+      render: (address) => address || 'N/A'
+    },
+    {
+      title: 'City',
+      dataIndex: 'city',
+      key: 'city',
+      width: 120,
+      sorter: (a, b) => (a.city || '').localeCompare(b.city || ''),
+      render: (city) => city || 'N/A'
+    },
+    {
+      title: 'State',
+      dataIndex: 'state',
+      key: 'state',
+      width: 120,
+      sorter: (a, b) => (a.state || '').localeCompare(b.state || ''),
+      render: (state) => state || 'N/A'
+    },
+    {
+      title: 'Pincode',
+      dataIndex: 'pincode',
+      key: 'pincode',
+      width: 100,
+      sorter: (a, b) => (a.pincode || '').localeCompare(b.pincode || ''),
+      render: (pincode) => pincode || 'N/A'
+    },
+    {
+      title: 'Director Name',
+      dataIndex: 'directorName',
+      key: 'directorName',
+      width: 150,
+      sorter: (a, b) => (a.directorName || '').localeCompare(b.directorName || ''),
+      render: (name) => name || 'N/A'
+    },
+    {
+      title: 'PAN Number',
+      dataIndex: 'panNumber',
+      key: 'panNumber',
+      width: 120,
+      sorter: (a, b) => (a.panNumber || '').localeCompare(b.panNumber || ''),
+      render: (pan) => pan || 'N/A'
+    },
+    {
+      title: 'Aadhar Number',
+      dataIndex: 'aadharNumber',
+      key: 'aadharNumber',
+      width: 120,
+      sorter: (a, b) => (a.aadharNumber || '').localeCompare(b.aadharNumber || ''),
+      render: (aadhar) => aadhar || 'N/A'
+    },
+    {
+      title: 'Designation',
+      dataIndex: 'designation',
+      key: 'designation',
+      width: 120,
+      sorter: (a, b) => (a.designation || '').localeCompare(b.designation || ''),
+      render: (designation) => designation || 'N/A'
+    },
+    {
+      title: 'Director Address',
+      dataIndex: 'directorAddress',
+      key: 'directorAddress',
+      width: 200,
+      ellipsis: true,
+      sorter: (a, b) => (a.directorAddress || '').localeCompare(b.directorAddress || ''),
+      render: (address) => address || 'N/A'
+    },
+    {
+      title: 'GST Certificate',
+      dataIndex: 'gstRegistrationCertificate',
+      key: 'gstRegistrationCertificate',
+      width: 120,
+      render: (url) => url ? (
+        <Button type="link" onClick={() => window.open(url, '_blank')}>
+          View Certificate
+        </Button>
+      ) : 'N/A'
+    },
+    {
+      title: 'PAN Card',
+      dataIndex: 'panCardImage',
+      key: 'panCardImage',
+      width: 120,
+      render: (url) => url ? (
+        <Button type="link" onClick={() => window.open(url, '_blank')}>
+          View PAN Card
+        </Button>
+      ) : 'N/A'
+    },
+    {
+      title: 'Director Photo',
+      dataIndex: 'directorPhoto',
+      key: 'directorPhoto',
+      width: 120,
+      render: (url) => url ? (
+        <Button type="link" onClick={() => window.open(url, '_blank')}>
+          View Photo
+        </Button>
+      ) : 'N/A'
+    },
+    {
+      title: 'Director Signature',
+      dataIndex: 'directorSignature',
+      key: 'directorSignature',
+      width: 120,
+      render: (url) => url ? (
+        <Button type="link" onClick={() => window.open(url, '_blank')}>
+          View Signature
+        </Button>
+      ) : 'N/A'
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
       width: 100,
-      render: (status) => getStatusTag(status),
+      render: (status) => status ? getStatusTag(status) : 'N/A',
       filters: [
         { text: 'Pending', value: 'Pending' },
         { text: 'Approved', value: 'Approved' },
         { text: 'Rejected', value: 'Rejected' },
       ],
       onFilter: (value, record) => record.status === value,
+      sorter: (a, b) => (a.status || '').localeCompare(b.status || ''),
     },
     {
       title: 'Submitted Date',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 150,
-      render: (date) => new Date(date).toLocaleDateString(),
+      render: (date) => date ? new Date(date).toLocaleDateString() : 'N/A',
+      sorter: (a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateA - dateB;
+      },
     },
     {
       title: 'Actions',
       key: 'actions',
       width: 200,
+      fixed: 'right',
       render: (_, record) => (
         <Space>
           {record.status === 'Pending' && (
             <>
-              <Button 
-                type="primary" 
-                size="small" 
-                icon={<CheckCircleOutlined />}
-                onClick={() => handleApprove(record.id)}
+              <Popconfirm
+                title="Approve Company"
+                description="Are you sure you want to approve this company?"
+                onConfirm={() => handleApprove(record.id)}
+                okText="Yes"
+                cancelText="No"
+                okButtonProps={{ type: 'primary' }}
               >
-                Approve
-              </Button>
-              <Button 
-                danger 
-                size="small" 
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<CheckCircleOutlined />}
+                >
+                  Approve
+                </Button>
+              </Popconfirm>
+              <Button
+                danger
+                size="small"
                 icon={<CloseCircleOutlined />}
                 onClick={() => openRejectModal(record.id)}
               >
@@ -196,7 +374,7 @@ const CompaniesPage = () => {
             </>
           )}
           {record.status !== 'Pending' && (
-            <span style={{ color: '#999' }}>No actions available</span>
+            <span className="text-gray-500">No actions available</span>
           )}
         </Space>
       ),
@@ -210,7 +388,7 @@ const CompaniesPage = () => {
         dataSource={entries}
         rowKey="id"
         loading={loading}
-        scroll={{ x: 1200 }}
+        scroll={{ x: 2000 }}
         pagination={{
           pageSize: 10,
           showSizeChanger: true,

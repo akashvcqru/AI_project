@@ -60,12 +60,12 @@ const CompanyDetailsForm = ({ onNext, onPrev }: CompanyDetailsFormProps) => {
 
       <Form.Item
         name="address"
-        label="Registered Address"
+        label="Company Address"
         rules={[{ required: true, message: 'Please input your company address!' }]}
       >
         <Input.TextArea 
           rows={4} 
-          placeholder="Enter registered address" 
+          placeholder="Enter company address" 
           value={formData.address}
           onChange={(e) => handleFieldChange('address', e.target.value)}
         />
